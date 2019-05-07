@@ -1,5 +1,5 @@
 # Importing sqlite3.h
-# /home/arnetheduck/.nimble/pkgs/nimterop-0.1.0/nimterop/toast --pnim --preprocess sqlite3.h
+# /home/arnetheduck/.nimble/pkgs/nimterop-0.1.0/nimterop/toast --pnim --preprocess --pluginSourcePath=/tmp/nimterop_206929977416092270.nim sqlite3.h
 
 
 {.hint[ConvFromXtoItselfNotNeeded]: off.}
@@ -352,11 +352,13 @@ const
   FTS5_TOKENIZE_AUX* = 0x00000008
   FTS5_TOKEN_COLOCATED* = 0x00000001
 type
-  sqlite3* = object
+  Sqlite3* = object
   sqlite_int64* = clonglong
   sqlite_uint64* = culonglong
   sqlite3_int64* = sqlite_int64
   sqlite3_uint64* = sqlite_uint64
+  sqlite3_callback* = proc (a1: pointer; a2: cint; a3: ptr cstring; a4: ptr cstring): cint {.
+      nimcall.}
   sqlite3_file* = object
   sqlite3_io_methods* = object
   sqlite3_mutex* = object
@@ -403,27 +405,27 @@ proc sqlite3_compileoption_used*(zOptName: cstring): cint {.importc,
     header: headersqlite3.}
 proc sqlite3_compileoption_get*(N: cint): cstring {.importc, header: headersqlite3.}
 proc sqlite3_threadsafe*(): cint {.importc, header: headersqlite3.}
-proc sqlite3_close*(a1: ptr sqlite3): cint {.importc, header: headersqlite3.}
-proc sqlite3_close_v2*(a1: ptr sqlite3): cint {.importc, header: headersqlite3.}
+proc sqlite3_close*(a1: ptr Sqlite3): cint {.importc, header: headersqlite3.}
+proc sqlite3_close_v2*(a1: ptr Sqlite3): cint {.importc, header: headersqlite3.}
 proc sqlite3_initialize*(): cint {.importc, header: headersqlite3.}
 proc sqlite3_shutdown*(): cint {.importc, header: headersqlite3.}
 proc sqlite3_os_init*(): cint {.importc, header: headersqlite3.}
 proc sqlite3_os_end*(): cint {.importc, header: headersqlite3.}
 proc sqlite3_config*(a1: cint): cint {.importc, header: headersqlite3.}
-proc sqlite3_db_config*(a1: ptr sqlite3; op: cint): cint {.importc,
+proc sqlite3_db_config*(a1: ptr Sqlite3; op: cint): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_extended_result_codes*(a1: ptr sqlite3; onoff: cint): cint {.importc,
+proc sqlite3_extended_result_codes*(a1: ptr Sqlite3; onoff: cint): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_last_insert_rowid*(a1: ptr sqlite3): sqlite3_int64 {.importc,
+proc sqlite3_last_insert_rowid*(a1: ptr Sqlite3): sqlite3_int64 {.importc,
     header: headersqlite3.}
-proc sqlite3_set_last_insert_rowid*(a1: ptr sqlite3; a2: sqlite3_int64) {.importc,
+proc sqlite3_set_last_insert_rowid*(a1: ptr Sqlite3; a2: sqlite3_int64) {.importc,
     header: headersqlite3.}
-proc sqlite3_changes*(a1: ptr sqlite3): cint {.importc, header: headersqlite3.}
-proc sqlite3_total_changes*(a1: ptr sqlite3): cint {.importc, header: headersqlite3.}
-proc sqlite3_interrupt*(a1: ptr sqlite3) {.importc, header: headersqlite3.}
+proc sqlite3_changes*(a1: ptr Sqlite3): cint {.importc, header: headersqlite3.}
+proc sqlite3_total_changes*(a1: ptr Sqlite3): cint {.importc, header: headersqlite3.}
+proc sqlite3_interrupt*(a1: ptr Sqlite3) {.importc, header: headersqlite3.}
 proc sqlite3_complete*(sql: cstring): cint {.importc, header: headersqlite3.}
 proc sqlite3_complete16*(sql: pointer): cint {.importc, header: headersqlite3.}
-proc sqlite3_busy_timeout*(a1: ptr sqlite3; ms: cint): cint {.importc,
+proc sqlite3_busy_timeout*(a1: ptr Sqlite3; ms: cint): cint {.importc,
     header: headersqlite3.}
 proc sqlite3_free_table*(result: ptr cstring) {.importc, header: headersqlite3.}
 proc sqlite3_mprintf*(a1: cstring): cstring {.importc, header: headersqlite3.}
@@ -444,11 +446,11 @@ proc sqlite3_memory_used*(): sqlite3_int64 {.importc, header: headersqlite3.}
 proc sqlite3_memory_highwater*(resetFlag: cint): sqlite3_int64 {.importc,
     header: headersqlite3.}
 proc sqlite3_randomness*(N: cint; P: pointer) {.importc, header: headersqlite3.}
-proc sqlite3_open*(filename: cstring; ppDb: ptr ptr sqlite3): cint {.importc,
+proc sqlite3_open*(filename: cstring; ppDb: ptr ptr Sqlite3): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_open16*(filename: pointer; ppDb: ptr ptr sqlite3): cint {.importc,
+proc sqlite3_open16*(filename: pointer; ppDb: ptr ptr Sqlite3): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_open_v2*(filename: cstring; ppDb: ptr ptr sqlite3; flags: cint;
+proc sqlite3_open_v2*(filename: cstring; ppDb: ptr ptr Sqlite3; flags: cint;
                      zVfs: cstring): cint {.importc, header: headersqlite3.}
 proc sqlite3_uri_parameter*(zFilename: cstring; zParam: cstring): cstring {.importc,
     header: headersqlite3.}
@@ -456,29 +458,29 @@ proc sqlite3_uri_boolean*(zFile: cstring; zParam: cstring; bDefault: cint): cint
     importc, header: headersqlite3.}
 proc sqlite3_uri_int64*(a1: cstring; a2: cstring; a3: sqlite3_int64): sqlite3_int64 {.
     importc, header: headersqlite3.}
-proc sqlite3_errcode*(db: ptr sqlite3): cint {.importc, header: headersqlite3.}
-proc sqlite3_extended_errcode*(db: ptr sqlite3): cint {.importc, header: headersqlite3.}
-proc sqlite3_errmsg*(a1: ptr sqlite3): cstring {.importc, header: headersqlite3.}
-proc sqlite3_errmsg16*(a1: ptr sqlite3): pointer {.importc, header: headersqlite3.}
+proc sqlite3_errcode*(db: ptr Sqlite3): cint {.importc, header: headersqlite3.}
+proc sqlite3_extended_errcode*(db: ptr Sqlite3): cint {.importc, header: headersqlite3.}
+proc sqlite3_errmsg*(a1: ptr Sqlite3): cstring {.importc, header: headersqlite3.}
+proc sqlite3_errmsg16*(a1: ptr Sqlite3): pointer {.importc, header: headersqlite3.}
 proc sqlite3_errstr*(a1: cint): cstring {.importc, header: headersqlite3.}
-proc sqlite3_limit*(a1: ptr sqlite3; id: cint; newVal: cint): cint {.importc,
+proc sqlite3_limit*(a1: ptr Sqlite3; id: cint; newVal: cint): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_prepare*(db: ptr sqlite3; zSql: cstring; nByte: cint;
+proc sqlite3_prepare*(db: ptr Sqlite3; zSql: cstring; nByte: cint;
                      ppStmt: ptr ptr sqlite3_stmt; pzTail: ptr cstring): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_prepare_v2*(db: ptr sqlite3; zSql: cstring; nByte: cint;
+proc sqlite3_prepare_v2*(db: ptr Sqlite3; zSql: cstring; nByte: cint;
                         ppStmt: ptr ptr sqlite3_stmt; pzTail: ptr cstring): cint {.
     importc, header: headersqlite3.}
-proc sqlite3_prepare_v3*(db: ptr sqlite3; zSql: cstring; nByte: cint; prepFlags: cuint;
+proc sqlite3_prepare_v3*(db: ptr Sqlite3; zSql: cstring; nByte: cint; prepFlags: cuint;
                         ppStmt: ptr ptr sqlite3_stmt; pzTail: ptr cstring): cint {.
     importc, header: headersqlite3.}
-proc sqlite3_prepare16*(db: ptr sqlite3; zSql: pointer; nByte: cint;
+proc sqlite3_prepare16*(db: ptr Sqlite3; zSql: pointer; nByte: cint;
                        ppStmt: ptr ptr sqlite3_stmt; pzTail: ptr pointer): cint {.
     importc, header: headersqlite3.}
-proc sqlite3_prepare16_v2*(db: ptr sqlite3; zSql: pointer; nByte: cint;
+proc sqlite3_prepare16_v2*(db: ptr Sqlite3; zSql: pointer; nByte: cint;
                           ppStmt: ptr ptr sqlite3_stmt; pzTail: ptr pointer): cint {.
     importc, header: headersqlite3.}
-proc sqlite3_prepare16_v3*(db: ptr sqlite3; zSql: pointer; nByte: cint;
+proc sqlite3_prepare16_v3*(db: ptr Sqlite3; zSql: pointer; nByte: cint;
                           prepFlags: cuint; ppStmt: ptr ptr sqlite3_stmt;
                           pzTail: ptr pointer): cint {.importc, header: headersqlite3.}
 proc sqlite3_sql*(pStmt: ptr sqlite3_stmt): cstring {.importc, header: headersqlite3.}
@@ -600,7 +602,7 @@ proc sqlite3_aggregate_context*(a1: ptr sqlite3_context; nBytes: cint): pointer 
     importc, header: headersqlite3.}
 proc sqlite3_user_data*(a1: ptr sqlite3_context): pointer {.importc,
     header: headersqlite3.}
-proc sqlite3_context_db_handle*(a1: ptr sqlite3_context): ptr sqlite3 {.importc,
+proc sqlite3_context_db_handle*(a1: ptr sqlite3_context): ptr Sqlite3 {.importc,
     header: headersqlite3.}
 proc sqlite3_get_auxdata*(a1: ptr sqlite3_context; N: cint): pointer {.importc,
     header: headersqlite3.}
@@ -636,36 +638,42 @@ proc sqlite3_win32_set_directory8*(`type`: culong; zValue: cstring): cint {.impo
     header: headersqlite3.}
 proc sqlite3_win32_set_directory16*(`type`: culong; zValue: pointer): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_get_autocommit*(a1: ptr sqlite3): cint {.importc, header: headersqlite3.}
-proc sqlite3_db_handle*(a1: ptr sqlite3_stmt): ptr sqlite3 {.importc,
+proc sqlite3_get_autocommit*(a1: ptr Sqlite3): cint {.importc, header: headersqlite3.}
+proc sqlite3_db_handle*(a1: ptr sqlite3_stmt): ptr Sqlite3 {.importc,
     header: headersqlite3.}
-proc sqlite3_db_filename*(db: ptr sqlite3; zDbName: cstring): cstring {.importc,
+proc sqlite3_db_filename*(db: ptr Sqlite3; zDbName: cstring): cstring {.importc,
     header: headersqlite3.}
-proc sqlite3_db_readonly*(db: ptr sqlite3; zDbName: cstring): cint {.importc,
+proc sqlite3_db_readonly*(db: ptr Sqlite3; zDbName: cstring): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_next_stmt*(pDb: ptr sqlite3; pStmt: ptr sqlite3_stmt): ptr sqlite3_stmt {.
+proc sqlite3_next_stmt*(pDb: ptr Sqlite3; pStmt: ptr sqlite3_stmt): ptr sqlite3_stmt {.
     importc, header: headersqlite3.}
 proc sqlite3_enable_shared_cache*(a1: cint): cint {.importc, header: headersqlite3.}
 proc sqlite3_release_memory*(a1: cint): cint {.importc, header: headersqlite3.}
-proc sqlite3_db_release_memory*(a1: ptr sqlite3): cint {.importc,
+proc sqlite3_db_release_memory*(a1: ptr Sqlite3): cint {.importc,
     header: headersqlite3.}
 proc sqlite3_soft_heap_limit64*(N: sqlite3_int64): sqlite3_int64 {.importc,
     header: headersqlite3.}
 proc sqlite3_soft_heap_limit*(N: cint) {.importc, header: headersqlite3.}
-proc sqlite3_load_extension*(db: ptr sqlite3; zFile: cstring; zProc: cstring;
+proc sqlite3_table_column_metadata*(db: ptr Sqlite3; zDbName: cstring;
+                                   zTableName: cstring; zColumnName: cstring;
+                                   pzDataType: ptr cstring; pzCollSeq: ptr cstring;
+                                   pNotNull: ptr cint; pPrimaryKey: ptr cint;
+                                   pAutoinc: ptr cint): cint {.importc,
+    header: headersqlite3.}
+proc sqlite3_load_extension*(db: ptr Sqlite3; zFile: cstring; zProc: cstring;
                             pzErrMsg: ptr cstring): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_enable_load_extension*(db: ptr sqlite3; onoff: cint): cint {.importc,
+proc sqlite3_enable_load_extension*(db: ptr Sqlite3; onoff: cint): cint {.importc,
     header: headersqlite3.}
 proc sqlite3_reset_auto_extension*() {.importc, header: headersqlite3.}
-proc sqlite3_create_module*(db: ptr sqlite3; zName: cstring; p: ptr sqlite3_module;
+proc sqlite3_create_module*(db: ptr Sqlite3; zName: cstring; p: ptr sqlite3_module;
                            pClientData: pointer): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_declare_vtab*(a1: ptr sqlite3; zSQL: cstring): cint {.importc,
+proc sqlite3_declare_vtab*(a1: ptr Sqlite3; zSQL: cstring): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_overload_function*(a1: ptr sqlite3; zFuncName: cstring; nArg: cint): cint {.
+proc sqlite3_overload_function*(a1: ptr Sqlite3; zFuncName: cstring; nArg: cint): cint {.
     importc, header: headersqlite3.}
-proc sqlite3_blob_open*(a1: ptr sqlite3; zDb: cstring; zTable: cstring;
+proc sqlite3_blob_open*(a1: ptr Sqlite3; zDb: cstring; zTable: cstring;
                        zColumn: cstring; iRow: sqlite3_int64; flags: cint;
                        ppBlob: ptr ptr sqlite3_blob): cint {.importc,
     header: headersqlite3.}
@@ -692,15 +700,17 @@ proc sqlite3_mutex_leave*(a1: ptr sqlite3_mutex) {.importc, header: headersqlite
 proc sqlite3_mutex_held*(a1: ptr sqlite3_mutex): cint {.importc, header: headersqlite3.}
 proc sqlite3_mutex_notheld*(a1: ptr sqlite3_mutex): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_db_mutex*(a1: ptr sqlite3): ptr sqlite3_mutex {.importc,
+proc sqlite3_db_mutex*(a1: ptr Sqlite3): ptr sqlite3_mutex {.importc,
     header: headersqlite3.}
-proc sqlite3_file_control*(a1: ptr sqlite3; zDbName: cstring; op: cint; a2: pointer): cint {.
+proc sqlite3_file_control*(a1: ptr Sqlite3; zDbName: cstring; op: cint; a2: pointer): cint {.
     importc, header: headersqlite3.}
 proc sqlite3_test_control*(op: cint): cint {.importc, header: headersqlite3.}
 proc sqlite3_keyword_count*(): cint {.importc, header: headersqlite3.}
+proc sqlite3_keyword_name*(a1: cint; a2: ptr cstring; a3: ptr cint): cint {.importc,
+    header: headersqlite3.}
 proc sqlite3_keyword_check*(a1: cstring; a2: cint): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_str_new*(a1: ptr sqlite3): ptr sqlite3_str {.importc,
+proc sqlite3_str_new*(a1: ptr Sqlite3): ptr sqlite3_str {.importc,
     header: headersqlite3.}
 proc sqlite3_str_finish*(a1: ptr sqlite3_str): cstring {.importc,
     header: headersqlite3.}
@@ -723,12 +733,12 @@ proc sqlite3_status*(op: cint; pCurrent: ptr cint; pHighwater: ptr cint; resetFl
 proc sqlite3_status64*(op: cint; pCurrent: ptr sqlite3_int64;
                       pHighwater: ptr sqlite3_int64; resetFlag: cint): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_db_status*(a1: ptr sqlite3; op: cint; pCur: ptr cint; pHiwtr: ptr cint;
+proc sqlite3_db_status*(a1: ptr Sqlite3; op: cint; pCur: ptr cint; pHiwtr: ptr cint;
                        resetFlg: cint): cint {.importc, header: headersqlite3.}
 proc sqlite3_stmt_status*(a1: ptr sqlite3_stmt; op: cint; resetFlg: cint): cint {.
     importc, header: headersqlite3.}
-proc sqlite3_backup_init*(pDest: ptr sqlite3; zDestName: cstring;
-                         pSource: ptr sqlite3; zSourceName: cstring): ptr sqlite3_backup {.
+proc sqlite3_backup_init*(pDest: ptr Sqlite3; zDestName: cstring;
+                         pSource: ptr Sqlite3; zSourceName: cstring): ptr sqlite3_backup {.
     importc, header: headersqlite3.}
 proc sqlite3_backup_step*(p: ptr sqlite3_backup; nPage: cint): cint {.importc,
     header: headersqlite3.}
@@ -746,16 +756,16 @@ proc sqlite3_strglob*(zGlob: cstring; zStr: cstring): cint {.importc,
 proc sqlite3_strlike*(zGlob: cstring; zStr: cstring; cEsc: cuint): cint {.importc,
     header: headersqlite3.}
 proc sqlite3_log*(iErrCode: cint; zFormat: cstring) {.importc, header: headersqlite3.}
-proc sqlite3_wal_autocheckpoint*(db: ptr sqlite3; N: cint): cint {.importc,
+proc sqlite3_wal_autocheckpoint*(db: ptr Sqlite3; N: cint): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_wal_checkpoint*(db: ptr sqlite3; zDb: cstring): cint {.importc,
+proc sqlite3_wal_checkpoint*(db: ptr Sqlite3; zDb: cstring): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_wal_checkpoint_v2*(db: ptr sqlite3; zDb: cstring; eMode: cint;
+proc sqlite3_wal_checkpoint_v2*(db: ptr Sqlite3; zDb: cstring; eMode: cint;
                                pnLog: ptr cint; pnCkpt: ptr cint): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_vtab_config*(a1: ptr sqlite3; op: cint): cint {.importc,
+proc sqlite3_vtab_config*(a1: ptr Sqlite3; op: cint): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_vtab_on_conflict*(a1: ptr sqlite3): cint {.importc, header: headersqlite3.}
+proc sqlite3_vtab_on_conflict*(a1: ptr Sqlite3): cint {.importc, header: headersqlite3.}
 proc sqlite3_vtab_nochange*(a1: ptr sqlite3_context): cint {.importc,
     header: headersqlite3.}
 proc sqlite3_vtab_collation*(a1: ptr sqlite3_index_info; a2: cint): cstring {.importc,
@@ -764,24 +774,25 @@ proc sqlite3_stmt_scanstatus*(pStmt: ptr sqlite3_stmt; idx: cint; iScanStatusOp:
                              pOut: pointer): cint {.importc, header: headersqlite3.}
 proc sqlite3_stmt_scanstatus_reset*(a1: ptr sqlite3_stmt) {.importc,
     header: headersqlite3.}
-proc sqlite3_db_cacheflush*(a1: ptr sqlite3): cint {.importc, header: headersqlite3.}
-proc sqlite3_system_errno*(a1: ptr sqlite3): cint {.importc, header: headersqlite3.}
-proc sqlite3_snapshot_get*(db: ptr sqlite3; zSchema: cstring;
+proc sqlite3_db_cacheflush*(a1: ptr Sqlite3): cint {.importc, header: headersqlite3.}
+proc sqlite3_system_errno*(a1: ptr Sqlite3): cint {.importc, header: headersqlite3.}
+proc sqlite3_snapshot_get*(db: ptr Sqlite3; zSchema: cstring;
                           ppSnapshot: ptr ptr sqlite3_snapshot): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_snapshot_open*(db: ptr sqlite3; zSchema: cstring;
+proc sqlite3_snapshot_open*(db: ptr Sqlite3; zSchema: cstring;
                            pSnapshot: ptr sqlite3_snapshot): cint {.importc,
     header: headersqlite3.}
 proc sqlite3_snapshot_free*(a1: ptr sqlite3_snapshot) {.importc,
     header: headersqlite3.}
 proc sqlite3_snapshot_cmp*(p1: ptr sqlite3_snapshot; p2: ptr sqlite3_snapshot): cint {.
     importc, header: headersqlite3.}
-proc sqlite3_snapshot_recover*(db: ptr sqlite3; zDb: cstring): cint {.importc,
+proc sqlite3_snapshot_recover*(db: ptr Sqlite3; zDb: cstring): cint {.importc,
     header: headersqlite3.}
-proc sqlite3_serialize*(db: ptr sqlite3; zSchema: cstring; piSize: ptr sqlite3_int64;
+proc sqlite3_serialize*(db: ptr Sqlite3; zSchema: cstring; piSize: ptr sqlite3_int64;
                        mFlags: cuint): ptr cuchar {.importc, header: headersqlite3.}
-proc sqlite3_deserialize*(db: ptr sqlite3; zSchema: cstring; pData: ptr cuchar;
+proc sqlite3_deserialize*(db: ptr Sqlite3; zSchema: cstring; pData: ptr cuchar;
                          szDb: sqlite3_int64; szBuf: sqlite3_int64; mFlags: cuint): cint {.
     importc, header: headersqlite3.}
 
 {.compile: "sqlite3.c".}
+CC: sqlite3_abi_wrap
