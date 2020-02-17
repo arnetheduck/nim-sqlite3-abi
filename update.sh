@@ -14,15 +14,14 @@ ZIP="sqlite-amalgamation-$VER_INT.zip"
 unzip -jo $ZIP "sqlite-amalgamation-$VER_INT/sqlite3.c" "sqlite-amalgamation-$VER_INT/sqlite3.h"
 
 # TODO Lock down version
-nimble install -y nimterop
+nimble install -y nimterop@0.4.4
 
-nim c wrap.nim > sqlite3_abi.nim
+nim c --verbosity:0 --hints:off wrap.nim > sqlite3_gen.nim
+./wrap
 
 # TODO upstream is working on removing these
 
 sed -i \
-  -e 's|{.experimental: "codeReordering".}||' \
-  -e 's|^import||' \
-  -e 's|  nimterop / types||' \
+  -e 's|^import nimterop/types||' \
   -e "s|$PWD/||" \
-  sqlite3_abi.nim
+  sqlite3_gen.nim

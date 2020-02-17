@@ -7,8 +7,7 @@ cPlugin:
   import strutils
 
   proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
-   if sym.name == "sqlite3":
-     sym.name = "Sqlite3"
+    discard
 
 cImport("sqlite3.h")
 
