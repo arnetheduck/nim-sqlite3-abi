@@ -1,7 +1,7 @@
 # Importing sqlite3.h
-# Generated at 2020-02-17T15:32:34+01:00
+# Generated at 2020-02-17T15:51:08+01:00
 # Command line:
-#   /home/arnetheduck/.nimble/pkgs/nimterop-0.4.4/nimterop/toast --preprocess --pnim --nim:/home/arnetheduck/.choosenim/toolchains/nim-1.0.4/bin/nim --pluginSourcePath=/home/arnetheduck/.cache/nim/nimterop/cPlugins/nimterop_1508169752.nim sqlite3.h
+#   /home/arnetheduck/.nimble/pkgs/nimterop-0.4.4/nimterop/toast --preprocess --pnim --symOverride=sqlite3_vmprintf,sqlite3_vsnprintf,sqlite3_str_vappendf --nim:/home/arnetheduck/.choosenim/toolchains/nim-1.0.4/bin/nim --pluginSourcePath=/home/arnetheduck/.cache/nim/nimterop/cPlugins/nimterop_1508169752.nim sqlite3.h
 
 {.hint[ConvFromXtoItselfNotNeeded]: off.}
 
@@ -4539,9 +4539,7 @@ proc sqlite3_free_table*(result: ptr cstring) {.impsqlite3C.}
 # ** See also:  [built-in printf()], [printf() SQL function]
 # 
 proc sqlite3_mprintf*(a1: cstring): cstring {.impsqlite3C.}
-proc sqlite3_vmprintf*(a1: cstring, a2: va_list): cstring {.impsqlite3C.}
 proc sqlite3_snprintf*(a1: cint, a2: cstring, a3: cstring): cstring {.impsqlite3C.}
-proc sqlite3_vsnprintf*(a1: cint, a2: cstring, a3: cstring, a4: va_list): cstring {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Memory Allocation Subsystem
@@ -8372,7 +8370,6 @@ proc sqlite3_str_finish*(a1: ptr sqlite3_str): cstring {.impsqlite3C.}
 # ** subsequent call to [sqlite3_str_errcode(X)].
 # 
 proc sqlite3_str_appendf*(a1: ptr sqlite3_str, zFormat: cstring) {.impsqlite3C.}
-proc sqlite3_str_vappendf*(a1: ptr sqlite3_str, zFormat: cstring, a2: va_list) {.impsqlite3C.}
 proc sqlite3_str_append*(a1: ptr sqlite3_str, zIn: cstring, N: cint) {.impsqlite3C.}
 proc sqlite3_str_appendall*(a1: ptr sqlite3_str, zIn: cstring) {.impsqlite3C.}
 proc sqlite3_str_appendchar*(a1: ptr sqlite3_str, N: cint, C: cchar) {.impsqlite3C.}

@@ -3,6 +3,9 @@ import nimterop/cimport
 static:
   cDebug()
 
+  # uses va_list which is undefined
+  cSkipSymbol(@["sqlite3_vmprintf", "sqlite3_vsnprintf", "sqlite3_str_vappendf"])
+
 cPlugin:
   import strutils
 
