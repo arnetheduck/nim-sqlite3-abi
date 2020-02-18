@@ -13,8 +13,7 @@ ZIP="sqlite-amalgamation-$VER_INT.zip"
 
 unzip -jo $ZIP "sqlite-amalgamation-$VER_INT/sqlite3.c" "sqlite-amalgamation-$VER_INT/sqlite3.h"
 
-# TODO Lock down version
-nimble install -y nimterop@0.4.4
+[[ -v HAS_NIMTEROP ]] || nimble install -y nimterop@0.4.4
 
 nim c --verbosity:0 --hints:off wrap.nim > sqlite3_gen.nim
 ./wrap
@@ -23,5 +22,7 @@ nim c --verbosity:0 --hints:off wrap.nim > sqlite3_gen.nim
 
 sed -i \
   -e 's|^import nimterop/types||' \
+  -e 's|, header: headersqlite3||' \
+  -e 's|impsqlite3, incompleteStruct|incompleteStruct|' \
   -e "s|$PWD/||" \
   sqlite3_gen.nim

@@ -1,7 +1,7 @@
 # Importing sqlite3.h
-# Generated at 2020-02-17T15:51:08+01:00
+# Generated at 2020-02-18T09:22:20+01:00
 # Command line:
-#   /home/arnetheduck/.nimble/pkgs/nimterop-0.4.4/nimterop/toast --preprocess --pnim --symOverride=sqlite3_vmprintf,sqlite3_vsnprintf,sqlite3_str_vappendf --nim:/home/arnetheduck/.choosenim/toolchains/nim-1.0.4/bin/nim --pluginSourcePath=/home/arnetheduck/.cache/nim/nimterop/cPlugins/nimterop_1508169752.nim sqlite3.h
+#   /home/arnetheduck/.nimble/pkgs/nimterop-0.4.4/nimterop/toast --preprocess --pnim --symOverride=sqlite3_vmprintf,sqlite3_vsnprintf,sqlite3_str_vappendf,sqlite_int64,sqlite_uint64,sqlite3_int64,sqlite3_uint64 --nim:/home/arnetheduck/.choosenim/toolchains/nim-1.0.4/bin/nim --pluginSourcePath=/home/arnetheduck/.cache/nim/nimterop/cPlugins/nimterop_93481909.nim sqlite3.h
 
 {.hint[ConvFromXtoItselfNotNeeded]: off.}
 
@@ -2117,7 +2117,7 @@ const
   # ** as the third argument to the supplied xToken callback.
   FTS5_TOKEN_COLOCATED* = 0x0001
 
-{.pragma: impsqlite3, importc, header: headersqlite3.}
+{.pragma: impsqlite3, importc.}
 {.pragma: impsqlite3C, impsqlite3, cdecl.}
 
 type
@@ -2136,28 +2136,7 @@ type
   # ** [sqlite3_busy_timeout()] to name but three) that are methods on an
   # ** sqlite3 object.
   # 
-  sqlite3* {.impsqlite3, incompleteStruct.} = object
-
-  # 
-  # ** CAPI3REF: 64-Bit Integer Types
-  # ** KEYWORDS: sqlite_int64 sqlite_uint64
-  # **
-  # ** Because there is no cross-platform way to specify 64-bit integer types
-  # ** SQLite includes typedefs for 64-bit signed and unsigned integers.
-  # **
-  # ** The sqlite3_int64 and sqlite3_uint64 are the preferred type definitions.
-  # ** The sqlite_int64 and sqlite_uint64 types are supported for backwards
-  # ** compatibility only.
-  # **
-  # ** ^The sqlite3_int64 and sqlite_int64 types can store integer values
-  # ** between -9223372036854775808 and +9223372036854775807 inclusive.  ^The
-  # ** sqlite3_uint64 and sqlite_uint64 types can store integer values
-  # ** between 0 and +18446744073709551615 inclusive.
-  # 
-  sqlite_int64* {.impsqlite3.} = clonglong
-  sqlite_uint64* {.impsqlite3.} = culonglong
-  sqlite3_int64* {.impsqlite3.} = sqlite_int64
-  sqlite3_uint64* {.impsqlite3.} = sqlite_uint64
+  sqlite3* {.incompleteStruct.} = object
 
   # 
   # ** The type for a callback function.
@@ -2177,7 +2156,7 @@ type
   # ** [sqlite3_io_methods] object that defines methods for performing
   # ** I/O operations on the open file.
   # 
-  sqlite3_file* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_file* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: OS Interface File Virtual Methods Object
@@ -2273,7 +2252,7 @@ type
   # ** failure to zero-fill short reads will eventually lead to
   # ** database corruption.
   # 
-  sqlite3_io_methods* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_io_methods* {.incompleteStruct.} = object
 
   #  deprecated names
   # 
@@ -2286,7 +2265,7 @@ type
   # **
   # ** Mutexes are created using [sqlite3_mutex_alloc()].
   # 
-  sqlite3_mutex* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_mutex* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: Loadable Extension Thunk
@@ -2296,7 +2275,7 @@ type
   # ** structure must be typedefed in order to work around compiler warnings
   # ** on some platforms.
   # 
-  sqlite3_api_routines* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_api_routines* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: OS Interface Object
@@ -2461,7 +2440,7 @@ type
   # ** from one release to the next.  Applications must not attempt to access
   # ** any of these methods if the iVersion of the VFS is less than 3.
   # 
-  sqlite3_vfs* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_vfs* {.incompleteStruct.} = object
   sqlite3_syscall_ptr* {.impsqlite3.} = proc() {.cdecl.}
   # Type 'sqlite3_vfs' skipped
   # Type 'sqlite3_vfs' skipped
@@ -2558,7 +2537,7 @@ type
   # ** SQLite will never invoke xInit() more than once without an intervening
   # ** call to xShutdown().
   # 
-  sqlite3_mem_methods* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_mem_methods* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: Prepared Statement Object
@@ -2584,7 +2563,7 @@ type
   # ** <li> Destroy the object using [sqlite3_finalize()].
   # ** </ol>
   # 
-  sqlite3_stmt* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_stmt* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: Dynamically Typed Value Object
@@ -2626,7 +2605,7 @@ type
   # ** The [sqlite3_value_blob | sqlite3_value_type()] family of
   # ** interfaces require protected sqlite3_value objects.
   # 
-  sqlite3_value* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_value* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: SQL Function Context Object
@@ -2640,7 +2619,7 @@ type
   # ** [sqlite3_context_db_handle()], [sqlite3_get_auxdata()],
   # ** and/or [sqlite3_set_auxdata()].
   # 
-  sqlite3_context* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_context* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: Constants Defining Special Destructor Behavior
@@ -2669,10 +2648,10 @@ type
   # 
   # ** Structures used by the virtual table interface
   # 
-  sqlite3_vtab* {.impsqlite3, incompleteStruct.} = object
-  sqlite3_index_info* {.impsqlite3, incompleteStruct.} = object
-  sqlite3_vtab_cursor* {.impsqlite3, incompleteStruct.} = object
-  sqlite3_module* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_vtab* {.incompleteStruct.} = object
+  sqlite3_index_info* {.incompleteStruct.} = object
+  sqlite3_vtab_cursor* {.incompleteStruct.} = object
+  sqlite3_module* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: Virtual Table Object
@@ -2878,7 +2857,7 @@ type
   # ** can be used to read or write small subsections of the BLOB.
   # ** ^The [sqlite3_blob_bytes()] interface returns the size of the BLOB in bytes.
   # 
-  sqlite3_blob* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_blob* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: Mutex Methods Object
@@ -2945,7 +2924,7 @@ type
   # ** If xMutexInit fails in any way, it is expected to clean up after itself
   # ** prior to returning.
   # 
-  sqlite3_mutex_methods* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_mutex_methods* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: Dynamic String Object
@@ -2963,7 +2942,7 @@ type
   # ** is returned using the [sqlite3_str_finish()] interface.
   # ** </ol>
   # 
-  sqlite3_str* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_str* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: Custom Page Cache Object
@@ -2976,7 +2955,7 @@ type
   # **
   # ** See [sqlite3_pcache_methods2] for additional information.
   # 
-  sqlite3_pcache* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_pcache* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: Custom Page Cache Object
@@ -2988,7 +2967,7 @@ type
   # **
   # ** See [sqlite3_pcache_methods2] for additional information.
   # 
-  sqlite3_pcache_page* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_pcache_page* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: Application Defined Page Cache.
@@ -3149,14 +3128,14 @@ type
   # ** is not obligated to free any memory, but well-behaved implementations should
   # ** do their best.
   # 
-  sqlite3_pcache_methods2* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_pcache_methods2* {.incompleteStruct.} = object
 
   # 
   # ** This is the obsolete pcache_methods object that has now been replaced
   # ** by sqlite3_pcache_methods2.  This object is not used by SQLite.  It is
   # ** retained in the header file for backwards compatibility only.
   # 
-  sqlite3_pcache_methods* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_pcache_methods* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: Online Backup Object
@@ -3168,7 +3147,7 @@ type
   # **
   # ** See Also: [Using the SQLite Online Backup API]
   # 
-  sqlite3_backup* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_backup* {.incompleteStruct.} = object
 
   # 
   # ** CAPI3REF: Database Snapshot
@@ -3190,7 +3169,7 @@ type
   # ** transaction that sees that historical version of the database rather than
   # ** the most recent version.
   # 
-  sqlite3_snapshot* {.importc: "struct sqlite3_snapshot", header: headersqlite3, bycopy.} = object
+  sqlite3_snapshot* {.importc: "struct sqlite3_snapshot", bycopy.} = object
     hidden*: array[48, cuchar]
 
   # 
@@ -3211,8 +3190,8 @@ type
   # **
   # *************************************************************************
   # 
-  sqlite3_rtree_geometry* {.impsqlite3, incompleteStruct.} = object
-  sqlite3_rtree_query_info* {.impsqlite3, incompleteStruct.} = object
+  sqlite3_rtree_geometry* {.incompleteStruct.} = object
+  sqlite3_rtree_query_info* {.incompleteStruct.} = object
 
   #  The double-precision datatype used by RTree depends on the
   # ** SQLITE_RTREE_INT_ONLY compile-time option.
@@ -3248,9 +3227,9 @@ type
   # ** Virtual table implementations may overload SQL functions by implementing
   # ** the sqlite3_module.xFindFunction() method.
   # 
-  Fts5ExtensionApi* {.impsqlite3, incompleteStruct.} = object
-  Fts5Context* {.impsqlite3, incompleteStruct.} = object
-  Fts5PhraseIter* {.impsqlite3, incompleteStruct.} = object
+  Fts5ExtensionApi* {.incompleteStruct.} = object
+  Fts5Context* {.incompleteStruct.} = object
+  Fts5PhraseIter* {.incompleteStruct.} = object
   fts5_extension_function* {.impsqlite3.} = proc(pApi: ptr Fts5ExtensionApi, pFts: ptr Fts5Context, pCtx: ptr sqlite3_context, nVal: cint, apVal: ptr ptr sqlite3_value) {.cdecl.}
 
   # 
@@ -3697,8 +3676,8 @@ type
   # **   text (method (3)), not both. Doing so will not cause any errors, but is
   # **   inefficient.
   # 
-  Fts5Tokenizer* {.impsqlite3, incompleteStruct.} = object
-  fts5_tokenizer* {.impsqlite3, incompleteStruct.} = object
+  Fts5Tokenizer* {.incompleteStruct.} = object
+  fts5_tokenizer* {.incompleteStruct.} = object
   # Type 'fts5_tokenizer' skipped
   # Type 'Fts5Tokenizer' skipped
   # Type 'Fts5Tokenizer' skipped
@@ -3714,7 +3693,7 @@ type
   # ************************************************************************
   # ** FTS5 EXTENSION REGISTRATION API
   # 
-  fts5_api* {.impsqlite3, incompleteStruct.} = object
+  fts5_api* {.incompleteStruct.} = object
   # Type 'fts5_api' skipped
   # Type 'fts5_api' skipped
   # Type 'fts5_tokenizer' skipped
@@ -3828,6 +3807,22 @@ proc sqlite3_compileoption_get*(N: cint): cstring {.impsqlite3C.}
 # 
 proc sqlite3_threadsafe*(): cint {.impsqlite3C.}
 
+# 
+# ** CAPI3REF: 64-Bit Integer Types
+# ** KEYWORDS: sqlite_int64 sqlite_uint64
+# **
+# ** Because there is no cross-platform way to specify 64-bit integer types
+# ** SQLite includes typedefs for 64-bit signed and unsigned integers.
+# **
+# ** The sqlite3_int64 and sqlite3_uint64 are the preferred type definitions.
+# ** The sqlite_int64 and sqlite_uint64 types are supported for backwards
+# ** compatibility only.
+# **
+# ** ^The sqlite3_int64 and sqlite_int64 types can store integer values
+# ** between -9223372036854775808 and +9223372036854775807 inclusive.  ^The
+# ** sqlite3_uint64 and sqlite_uint64 types can store integer values
+# ** between 0 and +18446744073709551615 inclusive.
+# 
 # 
 # ** If compiling for a processor that lacks floating point support,
 # ** substitute integer for floating-point.
@@ -4148,7 +4143,7 @@ proc sqlite3_extended_result_codes*(a1: ptr sqlite3, onoff: cint): cint {.impsql
 # ** unpredictable and might not equal either the old or the new
 # ** last insert [rowid].
 # 
-proc sqlite3_last_insert_rowid*(a1: ptr sqlite3): sqlite3_int64 {.impsqlite3C.}
+proc sqlite3_last_insert_rowid*(a1: ptr sqlite3): int64 {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Set the Last Insert Rowid value.
@@ -4158,7 +4153,7 @@ proc sqlite3_last_insert_rowid*(a1: ptr sqlite3): sqlite3_int64 {.impsqlite3C.}
 # ** set the value returned by calling sqlite3_last_insert_rowid(D) to R
 # ** without inserting a row into the database.
 # 
-proc sqlite3_set_last_insert_rowid*(a1: ptr sqlite3, a2: sqlite3_int64) {.impsqlite3C.}
+proc sqlite3_set_last_insert_rowid*(a1: ptr sqlite3, a2: int64) {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Count The Number Of Rows Modified
@@ -4630,11 +4625,11 @@ proc sqlite3_snprintf*(a1: cint, a2: cstring, a3: cstring): cstring {.impsqlite3
 # ** [sqlite3_free()] or [sqlite3_realloc()].
 # 
 proc sqlite3_malloc*(a1: cint): pointer {.impsqlite3C.}
-proc sqlite3_malloc64*(a1: sqlite3_uint64): pointer {.impsqlite3C.}
+proc sqlite3_malloc64*(a1: uint64): pointer {.impsqlite3C.}
 proc sqlite3_realloc*(a1: pointer, a2: cint): pointer {.impsqlite3C.}
-proc sqlite3_realloc64*(a1: pointer, a2: sqlite3_uint64): pointer {.impsqlite3C.}
+proc sqlite3_realloc64*(a1: pointer, a2: uint64): pointer {.impsqlite3C.}
 proc sqlite3_free*(a1: pointer) {.impsqlite3C.}
-proc sqlite3_msize*(a1: pointer): sqlite3_uint64 {.impsqlite3C.}
+proc sqlite3_msize*(a1: pointer): uint64 {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Memory Allocator Statistics
@@ -4659,8 +4654,8 @@ proc sqlite3_msize*(a1: pointer): sqlite3_uint64 {.impsqlite3C.}
 # ** by [sqlite3_memory_highwater(1)] is the high-water mark
 # ** prior to the reset.
 # 
-proc sqlite3_memory_used*(): sqlite3_int64 {.impsqlite3C.}
-proc sqlite3_memory_highwater*(resetFlag: cint): sqlite3_int64 {.impsqlite3C.}
+proc sqlite3_memory_used*(): int64 {.impsqlite3C.}
+proc sqlite3_memory_highwater*(resetFlag: cint): int64 {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Pseudo-Random Number Generator
@@ -5163,7 +5158,7 @@ proc sqlite3_open_v2*(filename: cstring, ppDb: ptr ptr sqlite3, flags: cint, zVf
 # 
 proc sqlite3_uri_parameter*(zFilename: cstring, zParam: cstring): cstring {.impsqlite3C.}
 proc sqlite3_uri_boolean*(zFile: cstring, zParam: cstring, bDefault: cint): cint {.impsqlite3C.}
-proc sqlite3_uri_int64*(a1: cstring, a2: cstring, a3: sqlite3_int64): sqlite3_int64 {.impsqlite3C.}
+proc sqlite3_uri_int64*(a1: cstring, a2: cstring, a3: int64): int64 {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Error Codes And Messages
@@ -5595,7 +5590,7 @@ proc sqlite3_stmt_busy*(a1: ptr sqlite3_stmt): cint {.impsqlite3C.}
 # Declaration 'sqlite3_bind_blob64' skipped
 proc sqlite3_bind_double*(a1: ptr sqlite3_stmt, a2: cint, a3: cdouble): cint {.impsqlite3C.}
 proc sqlite3_bind_int*(a1: ptr sqlite3_stmt, a2: cint, a3: cint): cint {.impsqlite3C.}
-proc sqlite3_bind_int64*(a1: ptr sqlite3_stmt, a2: cint, a3: sqlite3_int64): cint {.impsqlite3C.}
+proc sqlite3_bind_int64*(a1: ptr sqlite3_stmt, a2: cint, a3: int64): cint {.impsqlite3C.}
 proc sqlite3_bind_null*(a1: ptr sqlite3_stmt, a2: cint): cint {.impsqlite3C.}
 # Declaration 'sqlite3_bind_text' skipped
 # Declaration 'sqlite3_bind_text' skipped
@@ -5608,7 +5603,7 @@ proc sqlite3_bind_value*(a1: ptr sqlite3_stmt, a2: cint, a3: ptr sqlite3_value):
 # Declaration 'sqlite3_bind_pointer' skipped
 # Declaration 'sqlite3_bind_pointer' skipped
 proc sqlite3_bind_zeroblob*(a1: ptr sqlite3_stmt, a2: cint, n: cint): cint {.impsqlite3C.}
-proc sqlite3_bind_zeroblob64*(a1: ptr sqlite3_stmt, a2: cint, a3: sqlite3_uint64): cint {.impsqlite3C.}
+proc sqlite3_bind_zeroblob64*(a1: ptr sqlite3_stmt, a2: cint, a3: uint64): cint {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Number Of SQL Parameters
@@ -6136,7 +6131,7 @@ proc sqlite3_data_count*(pStmt: ptr sqlite3_stmt): cint {.impsqlite3C.}
 proc sqlite3_column_blob*(a1: ptr sqlite3_stmt, iCol: cint): pointer {.impsqlite3C.}
 proc sqlite3_column_double*(a1: ptr sqlite3_stmt, iCol: cint): cdouble {.impsqlite3C.}
 proc sqlite3_column_int*(a1: ptr sqlite3_stmt, iCol: cint): cint {.impsqlite3C.}
-proc sqlite3_column_int64*(a1: ptr sqlite3_stmt, iCol: cint): sqlite3_int64 {.impsqlite3C.}
+proc sqlite3_column_int64*(a1: ptr sqlite3_stmt, iCol: cint): int64 {.impsqlite3C.}
 proc sqlite3_column_text*(a1: ptr sqlite3_stmt, iCol: cint): ptr cuchar {.impsqlite3C.}
 proc sqlite3_column_text16*(a1: ptr sqlite3_stmt, iCol: cint): pointer {.impsqlite3C.}
 proc sqlite3_column_value*(a1: ptr sqlite3_stmt, iCol: cint): ptr sqlite3_value {.impsqlite3C.}
@@ -6515,7 +6510,7 @@ proc sqlite3_thread_cleanup*() {.impsqlite3C.}
 proc sqlite3_value_blob*(a1: ptr sqlite3_value): pointer {.impsqlite3C.}
 proc sqlite3_value_double*(a1: ptr sqlite3_value): cdouble {.impsqlite3C.}
 proc sqlite3_value_int*(a1: ptr sqlite3_value): cint {.impsqlite3C.}
-proc sqlite3_value_int64*(a1: ptr sqlite3_value): sqlite3_int64 {.impsqlite3C.}
+proc sqlite3_value_int64*(a1: ptr sqlite3_value): int64 {.impsqlite3C.}
 proc sqlite3_value_pointer*(a1: ptr sqlite3_value, a2: cstring): pointer {.impsqlite3C.}
 proc sqlite3_value_text*(a1: ptr sqlite3_value): ptr cuchar {.impsqlite3C.}
 proc sqlite3_value_text16*(a1: ptr sqlite3_value): pointer {.impsqlite3C.}
@@ -6828,7 +6823,7 @@ proc sqlite3_result_error_toobig*(a1: ptr sqlite3_context) {.impsqlite3C.}
 proc sqlite3_result_error_nomem*(a1: ptr sqlite3_context) {.impsqlite3C.}
 proc sqlite3_result_error_code*(a1: ptr sqlite3_context, a2: cint) {.impsqlite3C.}
 proc sqlite3_result_int*(a1: ptr sqlite3_context, a2: cint) {.impsqlite3C.}
-proc sqlite3_result_int64*(a1: ptr sqlite3_context, a2: sqlite3_int64) {.impsqlite3C.}
+proc sqlite3_result_int64*(a1: ptr sqlite3_context, a2: int64) {.impsqlite3C.}
 proc sqlite3_result_null*(a1: ptr sqlite3_context) {.impsqlite3C.}
 # Declaration 'sqlite3_result_text' skipped
 # Declaration 'sqlite3_result_text' skipped
@@ -6845,7 +6840,7 @@ proc sqlite3_result_value*(a1: ptr sqlite3_context, a2: ptr sqlite3_value) {.imp
 # Declaration 'sqlite3_result_pointer' skipped
 # Declaration 'sqlite3_result_pointer' skipped
 proc sqlite3_result_zeroblob*(a1: ptr sqlite3_context, n: cint) {.impsqlite3C.}
-proc sqlite3_result_zeroblob64*(a1: ptr sqlite3_context, n: sqlite3_uint64): cint {.impsqlite3C.}
+proc sqlite3_result_zeroblob64*(a1: ptr sqlite3_context, n: uint64): cint {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Setting The Subtype Of An SQL Function
@@ -7443,7 +7438,7 @@ proc sqlite3_db_release_memory*(a1: ptr sqlite3): cint {.impsqlite3C.}
 # ** The circumstances under which SQLite will enforce the soft heap limit may
 # ** changes in future releases of SQLite.
 # 
-proc sqlite3_soft_heap_limit64*(N: sqlite3_int64): sqlite3_int64 {.impsqlite3C.}
+proc sqlite3_soft_heap_limit64*(N: int64): int64 {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Deprecated Soft Heap Limit Interface
@@ -7848,7 +7843,7 @@ proc sqlite3_overload_function*(a1: ptr sqlite3, zFuncName: cstring, nArg: cint)
 # ** [sqlite3_blob_reopen()], [sqlite3_blob_read()],
 # ** [sqlite3_blob_bytes()], [sqlite3_blob_write()].
 # 
-proc sqlite3_blob_open*(a1: ptr sqlite3, zDb: cstring, zTable: cstring, zColumn: cstring, iRow: sqlite3_int64, flags: cint, ppBlob: ptr ptr sqlite3_blob): cint {.impsqlite3C.}
+proc sqlite3_blob_open*(a1: ptr sqlite3, zDb: cstring, zTable: cstring, zColumn: cstring, iRow: int64, flags: cint, ppBlob: ptr ptr sqlite3_blob): cint {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Move a BLOB Handle to a New Row
@@ -7873,7 +7868,7 @@ proc sqlite3_blob_open*(a1: ptr sqlite3, zDb: cstring, zTable: cstring, zColumn:
 # **
 # ** ^This function sets the database handle error code and message.
 # 
-proc sqlite3_blob_reopen*(a1: ptr sqlite3_blob, a2: sqlite3_int64): cint {.impsqlite3C.}
+proc sqlite3_blob_reopen*(a1: ptr sqlite3_blob, a2: int64): cint {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Close A BLOB Handle
@@ -8435,7 +8430,7 @@ proc sqlite3_str_value*(a1: ptr sqlite3_str): cstring {.impsqlite3C.}
 # ** See also: [sqlite3_db_status()]
 # 
 proc sqlite3_status*(op: cint, pCurrent: ptr cint, pHighwater: ptr cint, resetFlag: cint): cint {.impsqlite3C.}
-proc sqlite3_status64*(op: cint, pCurrent: ptr sqlite3_int64, pHighwater: ptr sqlite3_int64, resetFlag: cint): cint {.impsqlite3C.}
+proc sqlite3_status64*(op: cint, pCurrent: ptr int64, pHighwater: ptr int64, resetFlag: cint): cint {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Database Connection Status
@@ -9485,7 +9480,7 @@ proc sqlite3_snapshot_recover*(db: ptr sqlite3, zDb: cstring): cint {.impsqlite3
 # ** This interface is only available if SQLite is compiled with the
 # ** [SQLITE_ENABLE_DESERIALIZE] option.
 # 
-proc sqlite3_serialize*(db: ptr sqlite3, zSchema: cstring, piSize: ptr sqlite3_int64, mFlags: cuint): ptr cuchar {.impsqlite3C.}
+proc sqlite3_serialize*(db: ptr sqlite3, zSchema: cstring, piSize: ptr int64, mFlags: cuint): ptr cuchar {.impsqlite3C.}
 
 # 
 # ** CAPI3REF: Deserialize a database
@@ -9516,7 +9511,7 @@ proc sqlite3_serialize*(db: ptr sqlite3, zSchema: cstring, piSize: ptr sqlite3_i
 # ** This interface is only available if SQLite is compiled with the
 # ** [SQLITE_ENABLE_DESERIALIZE] option.
 # 
-proc sqlite3_deserialize*(db: ptr sqlite3, zSchema: cstring, pData: ptr cuchar, szDb: sqlite3_int64, szBuf: sqlite3_int64, mFlags: cuint): cint {.impsqlite3C.}
+proc sqlite3_deserialize*(db: ptr sqlite3, zSchema: cstring, pData: ptr cuchar, szDb: int64, szBuf: int64, mFlags: cuint): cint {.impsqlite3C.}
 
 # 
 # ** Register a geometry callback named zGeom that can be used as part of an
