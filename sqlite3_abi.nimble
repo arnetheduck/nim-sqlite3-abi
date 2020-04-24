@@ -1,9 +1,9 @@
 packageName   = "sqlite3_abi"
-version       = "3.27.2.1"
+version       = "3.27.2.2"
 author        = "Status Research & Development GmbH"
 description   = "A wrapper for SQLite"
 license       = "Apache License 2.0 or MIT"
-skipDirs      = @[]
+installFiles  = @["sqlite3_abi.nim", "sqlite3_gen.nim", "sqlite3.c", "sqlite3.h"]
 
 ### Dependencies
 requires "nim >= 0.18.1"
