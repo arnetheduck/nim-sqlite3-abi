@@ -1,5 +1,5 @@
 packageName   = "sqlite3_abi"
-version       = "3.27.2.2"
+version       = "3.34.0"
 author        = "Status Research & Development GmbH"
 description   = "A wrapper for SQLite"
 license       = "Apache License 2.0 or MIT"
