@@ -27,4 +27,4 @@ proc sqlite3_result_blob*(
 # constant which corresponds to SQLITE_TRANSIENT flag. Instructs sqlite to copy
 # data pointed by sqlite3_result_blob.bytes pointer. Then sqlite is reponsible
 # for deallocating this copied memory.
-const sqliteTransient* = cast[sqlite3_destructor_type](-1)
+const SQLITE_TRANSIENT* = cast[sqlite3_destructor_type](-1)
