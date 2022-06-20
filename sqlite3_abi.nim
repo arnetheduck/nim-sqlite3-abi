@@ -4,7 +4,21 @@
 import sqlite3_gen
 export sqlite3_gen
 
-proc sqlite3_bind_blob*(pstmt: ptr sqlite3_stmt, param: cint, value: pointer, n: cint, dispose: proc (v: pointer) {.cdecl.}): cint {.importc, cdecl.}
+proc sqlite3_bind_blob*(
+  pstmt: ptr sqlite3_stmt, 
+  param: cint, 
+  value: pointer, 
+  n: cint, 
+  dispose: proc (v: pointer) {.cdecl.}
+): cint {.importc, cdecl.}
+
+proc sqlite3_bind_text(
+  pstmt: ptr sqlite3_stmt,
+  param: cint,
+  value: pointer,
+  n: cint,
+  dispose: proc (v: pointer) {.cdecl.}
+): cint {.importc, cdecl.}
 
 proc sqlite3_create_function*(
   db: ptr sqlite3,
@@ -24,7 +38,14 @@ proc sqlite3_result_blob*(
   dispose: proc (v: pointer) {.cdecl.}
 ) {.importc, cdecl.}
 
-# constant which corresponds to SQLITE_TRANSIENT flag. Instructs sqlite to copy
-# data pointed by sqlite3_result_blob.bytes pointer. Then sqlite is reponsible
-# for deallocating this copied memory.
+# These are special values for the destructor that is passed in as the final
+# argument to routines like sqlite3_result_blob(). If the destructor argument
+# is SQLITE_STATIC, it means that the content pointer is constant and will
+# never change. It does not need to be destroyed.
+const SQLITE_STATIC* = cast[sqlite3_destructor_type](0)
+
+# The SQLITE_TRANSIENT value means that the content will likely change in the
+# near future and that SQLite should make its own private copy of the content
+# before returning. Then SQLite is responsible for deallocating this copied
+# memory.
 const SQLITE_TRANSIENT* = cast[sqlite3_destructor_type](-1)
