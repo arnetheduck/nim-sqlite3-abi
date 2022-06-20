@@ -9,7 +9,7 @@ proc sqlite3_bind_blob*(
   param: cint, 
   value: pointer, 
   n: cint, 
-  dispose: proc (v: pointer) {.cdecl.}
+  dispose: proc (v: pointer) {.cdecl, raises: [Defect].}
 ): cint {.importc, cdecl.}
 
 proc sqlite3_bind_text(
@@ -17,7 +17,7 @@ proc sqlite3_bind_text(
   param: cint,
   value: pointer,
   n: cint,
-  dispose: proc (v: pointer) {.cdecl.}
+  dispose: proc (v: pointer) {.cdecl, raises: [Defect].}
 ): cint {.importc, cdecl.}
 
 proc sqlite3_create_function*(
@@ -35,7 +35,7 @@ proc sqlite3_result_blob*(
   ctx: ptr sqlite3_context,
   bytes: pointer,
   n: cint,
-  dispose: proc (v: pointer) {.cdecl.}
+  dispose: proc (v: pointer) {.cdecl, raises: [Defect].}
 ) {.importc, cdecl.}
 
 # These are special values for the destructor that is passed in as the final
