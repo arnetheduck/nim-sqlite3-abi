@@ -4,27 +4,20 @@
 import sqlite3_gen
 export sqlite3_gen
 
-proc sqlite3_bind_blob*(pstmt: ptr sqlite3_stmt, param: cint, value: pointer, n: cint, dispose: proc (v: pointer) {.cdecl.}): cint {.importc, cdecl.}
 
-proc sqlite3_create_function*(
-  db: ptr sqlite3,
-  functionName: cstring,
-  nArgs: cint,
-  eTextRep: cint,
-  pApp: pointer,
-  xFunc: proc(ctx: ptr sqlite3_context, n: cint, v: ptr ptr sqlite3_value) {.cdecl.},
-  xStep: proc(ctx: ptr sqlite3_context, n: cint, v: ptr ptr sqlite3_value) {.cdecl.},
-  xFinal: proc(ctx: ptr sqlite3_context) {.cdecl.}
-): cint {.importc, cdecl.}
-
-proc sqlite3_result_blob*(
-  ctx: ptr sqlite3_context,
-  bytes: pointer,
-  n: cint,
-  dispose: proc (v: pointer) {.cdecl.}
-) {.importc, cdecl.}
-
-# constant which corresponds to SQLITE_TRANSIENT flag. Instructs sqlite to copy
-# data pointed by sqlite3_result_blob.bytes pointer. Then sqlite is reponsible
-# for deallocating this copied memory.
+# /*
+# ** CAPI3REF: Constants Defining Special Destructor Behavior
+# **
+# ** These are special values for the destructor that is passed in as the
+# ** final argument to routines like [sqlite3_result_blob()].  ^If the destructor
+# ** argument is SQLITE_STATIC, it means that the content pointer is constant
+# ** and will never change.  It does not need to be destroyed.  ^The
+# ** SQLITE_TRANSIENT value means that the content will likely change in
+# ** the near future and that SQLite should make its own private copy of
+# ** the content before returning.
+# **
+# ** The typedef is necessary to work around problems in certain
+# ** C++ compilers.
+# */
+const SQLITE_STATIC* = cast[sqlite3_destructor_type](0)
 const SQLITE_TRANSIENT* = cast[sqlite3_destructor_type](-1)

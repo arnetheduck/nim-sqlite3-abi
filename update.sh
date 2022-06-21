@@ -13,16 +13,12 @@ ZIP="sqlite-amalgamation-$VER_INT.zip"
 
 unzip -jo $ZIP "sqlite-amalgamation-$VER_INT/sqlite3.c" "sqlite-amalgamation-$VER_INT/sqlite3.h"
 
-[[ -v HAS_NIMTEROP ]] || nimble install -y nimterop@0.4.4
+[[ -v HAS_NIMTEROP ]] || nimble install -y nimterop@0.6.13
 
-nim c --verbosity:0 --hints:off wrap.nim > sqlite3_gen.nim
+nim c --verbosity:0 --hints:off wrap.nim
 ./wrap
 
-# TODO upstream is working on removing these
-
 sed -i \
-  -e 's|^import nimterop/types||' \
-  -e 's|, header: headersqlite3||' \
-  -e 's|impsqlite3, incompleteStruct|incompleteStruct|' \
+  -e "s|cdecl|cdecl, raises: [Defect]|g" \
   -e "s|$PWD/||" \
   sqlite3_gen.nim
