@@ -1,6 +1,6 @@
-# Generated @ 2022-06-21T09:28:04+02:00
+# Generated @ 2022-12-19T12:20:46+02:00
 # Command line:
-#   /home/arnetheduck/.nimble/pkgs/nimterop-0.6.13/nimterop/toast --preprocess -m:c -H --compile+=sqlite3.c --pnim --symOverride=sqlite3_index_info,sqlite3_vmprintf,sqlite3_vsnprintf,sqlite3_str_vappendf,sqlite_int64,sqlite_uint64,sqlite3_int64,sqlite3_uint64,SQLITE_STATIC,sqlite3_version --nim:/home/arnetheduck/src/Nim/bin/nim --pluginSourcePath=/home/arnetheduck/.cache/nim/nimterop/cPlugins/nimterop_2309319294.nim /home/arnetheduck/src/nim-sqlite3-abi/sqlite3.h -o /home/arnetheduck/src/nim-sqlite3-abi/sqlite3_gen.nim
+#   /home/yyoncho/.nimble/pkgs2/nimterop-0.6.13-a93246b2ad5531db11e51de7b2d188c42d95576a/nimterop/toast --preprocess -m:c -H --compile+=sqlite3_abi/sqlite3.c --pnim --symOverride=sqlite3_index_info,sqlite3_vmprintf,sqlite3_vsnprintf,sqlite3_str_vappendf,sqlite_int64,sqlite_uint64,sqlite3_int64,sqlite3_uint64,SQLITE_STATIC,sqlite3_version --nim:/home/yyoncho/.choosenim/toolchains/nim-#version-1-6/bin/nim --pluginSourcePath=/home/yyoncho/.cache/nim/nimterop/cPlugins/nimterop_2309319294.nim /home/yyoncho/Sources/nim/nim-sqlite3-abi/sqlite3_abi/sqlite3.h -o /home/yyoncho/Sources/nim/nim-sqlite3-abi/sqlite3_abi/sqlite3_gen.nim
 
 # const 'SQLITE_EXTERN' has unsupported value 'extern'
 # const 'SQLITE_STDCALL' has unsupported value 'SQLITE_APICALL'
@@ -22,7 +22,7 @@
 
 
 {.experimental: "codeReordering".}
-{.compile: "sqlite3.c".}
+{.compile: "sqlite3_abi/sqlite3.c".}
 const
   SQLITE_VERSION* = "3.34.0"
   SQLITE_VERSION_NUMBER* = 3034000
