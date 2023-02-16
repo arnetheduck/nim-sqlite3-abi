@@ -1,6 +1,6 @@
-# Generated @ 2022-12-19T12:20:46+02:00
+# Generated @ 2023-02-16T10:08:18+01:00
 # Command line:
-#   /home/yyoncho/.nimble/pkgs2/nimterop-0.6.13-a93246b2ad5531db11e51de7b2d188c42d95576a/nimterop/toast --preprocess -m:c -H --compile+=sqlite3_abi/sqlite3.c --pnim --symOverride=sqlite3_index_info,sqlite3_vmprintf,sqlite3_vsnprintf,sqlite3_str_vappendf,sqlite_int64,sqlite_uint64,sqlite3_int64,sqlite3_uint64,SQLITE_STATIC,sqlite3_version --nim:/home/yyoncho/.choosenim/toolchains/nim-#version-1-6/bin/nim --pluginSourcePath=/home/yyoncho/.cache/nim/nimterop/cPlugins/nimterop_2309319294.nim /home/yyoncho/Sources/nim/nim-sqlite3-abi/sqlite3_abi/sqlite3.h -o /home/yyoncho/Sources/nim/nim-sqlite3-abi/sqlite3_abi/sqlite3_gen.nim
+#   /home/arnetheduck/.nimble/pkgs/nimterop-0.6.13/nimterop/toast --preprocess -m:c -H --compile+=sqlite3_abi/sqlite3.c --pnim --symOverride=sqlite3_index_info,sqlite3_vmprintf,sqlite3_vsnprintf,sqlite3_str_vappendf,sqlite_int64,sqlite_uint64,sqlite3_int64,sqlite3_uint64,SQLITE_STATIC,sqlite3_version --nim:/home/arnetheduck/src/Nim/bin/nim --pluginSourcePath=/home/arnetheduck/.cache/nim/nimterop/cPlugins/nimterop_2309319294.nim /home/arnetheduck/src/nim-sqlite3-abi/sqlite3_abi/sqlite3.h -o /home/arnetheduck/src/nim-sqlite3-abi/sqlite3_abi/sqlite3_gen.nim
 
 # const 'SQLITE_EXTERN' has unsupported value 'extern'
 # const 'SQLITE_STDCALL' has unsupported value 'SQLITE_APICALL'
@@ -3848,7 +3848,7 @@ proc sqlite3_column_int*(a1: ptr sqlite3_stmt; iCol: cint): cint {.importc,
     cdecl, raises: [Defect].}
 proc sqlite3_column_int64*(a1: ptr sqlite3_stmt; iCol: cint): int64 {.importc,
     cdecl, raises: [Defect].}
-proc sqlite3_column_text*(a1: ptr sqlite3_stmt; iCol: cint): ptr cuchar {.
+proc sqlite3_column_text*(a1: ptr sqlite3_stmt; iCol: cint): cstring {.
     importc, cdecl, raises: [Defect].}
 proc sqlite3_column_text16*(a1: ptr sqlite3_stmt; iCol: cint): pointer {.
     importc, cdecl, raises: [Defect].}
@@ -4207,7 +4207,7 @@ proc sqlite3_value_int*(a1: ptr sqlite3_value): cint {.importc, cdecl, raises: [
 proc sqlite3_value_int64*(a1: ptr sqlite3_value): int64 {.importc, cdecl, raises: [Defect].}
 proc sqlite3_value_pointer*(a1: ptr sqlite3_value; a2: cstring): pointer {.
     importc, cdecl, raises: [Defect].}
-proc sqlite3_value_text*(a1: ptr sqlite3_value): ptr cuchar {.importc, cdecl, raises: [Defect].}
+proc sqlite3_value_text*(a1: ptr sqlite3_value): cstring {.importc, cdecl, raises: [Defect].}
 proc sqlite3_value_text16*(a1: ptr sqlite3_value): pointer {.importc, cdecl, raises: [Defect].}
 proc sqlite3_value_text16le*(a1: ptr sqlite3_value): pointer {.importc, cdecl, raises: [Defect].}
 proc sqlite3_value_text16be*(a1: ptr sqlite3_value): pointer {.importc, cdecl, raises: [Defect].}
