@@ -24,7 +24,7 @@ nim c -o:wrap --verbosity:0 --hints:off ./sqlite3_abi/wrap.nim
 sed -i \
   -e "s|cdecl|sqlitedecl|g" \
   -e "s|$PWD/||" \
-  -e 's|{.experimental: "codeReordering".}|{.experimental: "codeReordering".}\nwhen (NimMajor, NimMinor) < (1, 4):\n  {.pragma: sqlitedecl, cdecl, raises: [Defect].}\nelse:\n  {.pragma: sqlitedecl, cdecl, raises: [].}|' \
+  -e 's|{.experimental: "codeReordering".}|{.experimental: "codeReordering".}\nwhen (NimMajor, NimMinor) < (1, 4):\n  {.pragma: sqlitedecl, cdecl, gcsafe, raises: [Defect].}\nelse:\n  {.pragma: sqlitedecl, gcsafe, cdecl, raises: [].}|' \
   -e "s|sqlite3_column_text\\*(a1: ptr sqlite3_stmt; iCol: cint): ptr cuchar|sqlite3_column_text\\*(a1: ptr sqlite3_stmt; iCol: cint): cstring|" \
   -e "s|sqlite3_value_text\\*(a1: ptr sqlite3_value): ptr cuchar|sqlite3_value_text\\*(a1: ptr sqlite3_value): cstring|" \
   sqlite3_abi/sqlite3_gen.nim
