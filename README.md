@@ -12,7 +12,7 @@ TODO
 
 ## Versioning
 
-The library generally follows the upstream version number, adding one more number for its own purpose
+The library generally follows the upstream version number, adding one more number for tracking changes to the wrapping itself
 
 ## License
 
