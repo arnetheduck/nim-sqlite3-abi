@@ -24,7 +24,7 @@
 when (NimMajor, NimMinor) < (1, 4):
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [Defect].}
 else:
-  {.pragma: sqlitedecl, gcsafe, cdecl, raises: [].}
+  {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
   SQLITE_VERSION* = "3.40.1"
