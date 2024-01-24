@@ -39,4 +39,4 @@ sed -i.bak \
   -e "s|sqlite3_column_text\\*(a1: ptr sqlite3_stmt; iCol: cint): ptr cuchar|sqlite3_column_text\\*(a1: ptr sqlite3_stmt; iCol: cint): cstring|" \
   -e "s|sqlite3_value_text\\*(a1: ptr sqlite3_value): ptr cuchar|sqlite3_value_text\\*(a1: ptr sqlite3_value): cstring|" \
   sqlite3_abi/sqlite3_gen.nim
-rm -f sqlite3_abi/sqlite3_gen.nim.bak  # macOS `sed` requires backup with `-i`
+rm -f sqlite3_abi/sqlite3_gen.nim.bak  # Portable GNU/macOS `sed` needs backup
