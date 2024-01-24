@@ -2,6 +2,7 @@
 set -eu -o pipefail
 cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
+# https://www.sqlite.org/download.html
 MAJOR="${1:-3}"
 MINOR="${2:-40}"
 PATCH="${3:-1}"
