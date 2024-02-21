@@ -4,10 +4,10 @@ cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
 # https://www.sqlite.org/download.html
 MAJOR="${1:-3}"
-MINOR="${2:-41}"
-PATCH="${3:-2}"
+MINOR="${2:-42}"
+PATCH="${3:-0}"
 YEAR="${4:-2023}"
-HASH="${5:-c51ca72411b8453c64e0980be23bc9b9530bdc3ec1513e06fbf022ed0fd02463}"
+HASH="${5:-436747dc8090d015b9869b96f5837f745e852d2ce73fd77410ed76ee51107a1f}"
 
 VER_INT="$(printf "%d%02d%02d00" "$MAJOR" "$MINOR" "$PATCH")"
 

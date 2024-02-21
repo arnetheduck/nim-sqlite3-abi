@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.41.2"
-  SQLITE_VERSION_NUMBER* = 3041002
-  SQLITE_SOURCE_ID* = "2023-03-22 11:56:21 0d1fc92f94cb6b76bffe3ec34d69cffde2924203304e8ffc4155597af0c191da"
+  SQLITE_VERSION* = "3.42.0"
+  SQLITE_VERSION_NUMBER* = 3042000
+  SQLITE_SOURCE_ID* = "2023-05-16 12:36:15 831d0fb2836b71c9bc51067c49fee4b8f18047814f2ff22d817d25195cf350b0"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -354,7 +354,9 @@ const
   SQLITE_DBCONFIG_ENABLE_VIEW* = 1015
   SQLITE_DBCONFIG_LEGACY_FILE_FORMAT* = 1016
   SQLITE_DBCONFIG_TRUSTED_SCHEMA* = 1017
-  SQLITE_DBCONFIG_MAX* = 1017
+  SQLITE_DBCONFIG_STMT_SCANSTATUS* = 1018
+  SQLITE_DBCONFIG_REVERSE_SCANORDER* = 1019
+  SQLITE_DBCONFIG_MAX* = 1019
   SQLITE_DENY* = 1
   SQLITE_IGNORE* = 2
   SQLITE_CREATE_INDEX* = 1
@@ -539,6 +541,7 @@ const
   SQLITE_VTAB_CONSTRAINT_SUPPORT* = 1
   SQLITE_VTAB_INNOCUOUS* = 2
   SQLITE_VTAB_DIRECTONLY* = 3
+  SQLITE_VTAB_USES_ALL_SCHEMAS* = 4
   SQLITE_ROLLBACK* = 1
   SQLITE_FAIL* = 3
   SQLITE_REPLACE* = 5
@@ -1630,19 +1633,22 @@ proc sqlite3_config*(a1: cint): cint {.importc, sqlitedecl, varargs.}
                                                                 ##  * must ensure that no other SQLite interfaces are invoked by other
                                                                 ##  * threads while sqlite3_config() is running.</b>
                                                                 ##  *
-                                                                ##  * The sqlite3_config() interface
-                                                                ##  * may only be invoked prior to library initialization using
-                                                                ##  * [sqlite3_initialize()] or after shutdown by [sqlite3_shutdown()].
-                                                                ##  * ^If sqlite3_config() is called after [sqlite3_initialize()] and before
-                                                                ##  * [sqlite3_shutdown()] then it will return SQLITE_MISUSE.
-                                                                ##  * Note, however, that ^sqlite3_config() can be called as part of the
-                                                                ##  * implementation of an application-defined [sqlite3_os_init()].
-                                                                ##  *
                                                                 ##  * The first argument to sqlite3_config() is an integer
                                                                 ##  * [configuration option] that determines
                                                                 ##  * what property of SQLite is to be configured.  Subsequent arguments
                                                                 ##  * vary depending on the [configuration option]
                                                                 ##  * in the first argument.
+                                                                ##  *
+                                                                ##  * For most configuration options, the sqlite3_config() interface
+                                                                ##  * may only be invoked prior to library initialization using
+                                                                ##  * [sqlite3_initialize()] or after shutdown by [sqlite3_shutdown()].
+                                                                ##  * The exceptional configuration options that may be invoked at any time
+                                                                ##  * are called "anytime configuration options".
+                                                                ##  * ^If sqlite3_config() is called after [sqlite3_initialize()] and before
+                                                                ##  * [sqlite3_shutdown()] with a first argument that is not an anytime
+                                                                ##  * configuration option, then the sqlite3_config() call will return SQLITE_MISUSE.
+                                                                ##  * Note, however, that ^sqlite3_config() can be called as part of the
+                                                                ##  * implementation of an application-defined [sqlite3_os_init()].
                                                                 ##  *
                                                                 ##  * ^When a configuration option is set, sqlite3_config() returns [SQLITE_OK].
                                                                 ##  * ^If the option is unknown or SQLite is unable to set the option
@@ -4854,6 +4860,13 @@ proc sqlite3_sleep*(a1: cint): cint {.importc, sqlitedecl.}
                                                       ##  * of the default VFS is not implemented correctly, or not implemented at
                                                       ##  * all, then the behavior of sqlite3_sleep() may deviate from the description
                                                       ##  * in the previous paragraphs.
+                                                      ##  *
+                                                      ##  * If a negative argument is passed to sqlite3_sleep() the results vary by
+                                                      ##  * VFS and operating system.  Some system treat a negative argument as an
+                                                      ##  * instruction to sleep forever.  Others understand it to mean do not sleep
+                                                      ##  * at all. ^In SQLite version 3.42.0 and later, a negative
+                                                      ##  * argument passed into sqlite3_sleep() is changed to zero before it is relayed
+                                                      ##  * down into the xSleep method of the VFS.
                                                       ## ```
 proc sqlite3_win32_set_directory*(`type`: culong; zValue: pointer): cint {.
     importc, sqlitedecl.}
@@ -5975,9 +5988,9 @@ proc sqlite3_mutex_alloc*(a1: cint): ptr sqlite3_mutex {.importc, sqlitedecl.}
                                                                          ##  * is undefined if the mutex is not currently entered by the
                                                                          ##  * calling thread or is not currently allocated.
                                                                          ##  *
-                                                                         ##  * ^If the argument to sqlite3_mutex_enter(), sqlite3_mutex_try(), or
-                                                                         ##  * sqlite3_mutex_leave() is a NULL pointer, then all three routines
-                                                                         ##  * behave as no-ops.
+                                                                         ##  * ^If the argument to sqlite3_mutex_enter(), sqlite3_mutex_try(),
+                                                                         ##  * sqlite3_mutex_leave(), or sqlite3_mutex_free() is a NULL pointer,
+                                                                         ##  * then any of the four routines behaves as a no-op.
                                                                          ##  *
                                                                          ##  * See also: [sqlite3_mutex_held()] and [sqlite3_mutex_notheld()].
                                                                          ## ```
