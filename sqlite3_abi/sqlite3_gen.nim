@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.40.1"
-  SQLITE_VERSION_NUMBER* = 3040001
-  SQLITE_SOURCE_ID* = "2022-12-28 14:03:47 df5c253c0b3dd24916e4ec7cf77d3db5294cc9fd45ae7b9c5e82ad8197f38a24"
+  SQLITE_VERSION* = "3.41.2"
+  SQLITE_VERSION_NUMBER* = 3041002
+  SQLITE_SOURCE_ID* = "2023-03-22 11:56:21 0d1fc92f94cb6b76bffe3ec34d69cffde2924203304e8ffc4155597af0c191da"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -203,6 +203,8 @@ const
     SQLITE_NOTICE or typeof(SQLITE_NOTICE)((1 shl typeof(SQLITE_NOTICE)(8))))
   SQLITE_NOTICE_RECOVER_ROLLBACK* = (
     SQLITE_NOTICE or typeof(SQLITE_NOTICE)((2 shl typeof(SQLITE_NOTICE)(8))))
+  SQLITE_NOTICE_RBU* = (
+    SQLITE_NOTICE or typeof(SQLITE_NOTICE)((3 shl typeof(SQLITE_NOTICE)(8))))
   SQLITE_WARNING_AUTOINDEX* = (
     SQLITE_WARNING or typeof(SQLITE_WARNING)((1 shl typeof(SQLITE_WARNING)(8))))
   SQLITE_AUTH_USER* = (
@@ -546,6 +548,9 @@ const
   SQLITE_SCANSTAT_NAME* = 3
   SQLITE_SCANSTAT_EXPLAIN* = 4
   SQLITE_SCANSTAT_SELECTID* = 5
+  SQLITE_SCANSTAT_PARENTID* = 6
+  SQLITE_SCANSTAT_NCYCLE* = 7
+  SQLITE_SCANSTAT_COMPLEX* = 0x00000001
   SQLITE_SERIALIZE_NOCOPY* = 0x00000001
   SQLITE_DESERIALIZE_FREEONCLOSE* = 1
   SQLITE_DESERIALIZE_RESIZEABLE* = 2
@@ -1879,7 +1884,11 @@ proc sqlite3_interrupt*(a1: ptr sqlite3) {.importc, sqlitedecl.}
                                                            ##  * ^A call to sqlite3_interrupt(D) that occurs when there are no running
                                                            ##  * SQL statements is a no-op and has no effect on SQL statements
                                                            ##  * that are started after the sqlite3_interrupt() call returns.
+                                                           ##  *
+                                                           ##  * ^The [sqlite3_is_interrupted(D)] interface can be used to determine whether
+                                                           ##  * or not an interrupt is currently in effect for [database connection] D.
                                                            ## ```
+proc sqlite3_is_interrupted*(a1: ptr sqlite3): cint {.importc, sqlitedecl.}
 proc sqlite3_complete*(sql: cstring): cint {.importc, sqlitedecl.}
   ## ```
                                                              ##   * CAPI3REF: Determine If An SQL Statement Is Complete
@@ -2418,7 +2427,7 @@ proc sqlite3_progress_handler*(a1: ptr sqlite3; a2: cint;
                                                               ##  *
                                                               ##  * ^The sqlite3_progress_handler(D,N,X,P) interface causes the callback
                                                               ##  * function X to be invoked periodically during long running calls to
-                                                              ##  * [sqlite3_exec()], [sqlite3_step()] and [sqlite3_get_table()] for
+                                                              ##  * [sqlite3_step()] and [sqlite3_prepare()] and similar for
                                                               ##  * database connection D.  An example use for this
                                                               ##  * interface is to keep a GUI updated during a large query.
                                                               ##  *
@@ -2443,6 +2452,13 @@ proc sqlite3_progress_handler*(a1: ptr sqlite3; a2: cint;
                                                               ##  * Note that [sqlite3_prepare_v2()] and [sqlite3_step()] both modify their
                                                               ##  * database connections for the meaning of "modify" in this paragraph.
                                                               ##  *
+                                                              ##  * The progress handler callback would originally only be invoked from the
+                                                              ##  * bytecode engine.  It still might be invoked during [sqlite3_prepare()]
+                                                              ##  * and similar because those routines might force a reparse of the schema
+                                                              ##  * which involves running the bytecode engine.  However, beginning with
+                                                              ##  * SQLite version 3.41.0, the progress handler callback might also be
+                                                              ##  * invoked directly from [sqlite3_prepare()] while analyzing and generating
+                                                              ##  * code for complex queries.
                                                               ## ```
 proc sqlite3_open*(filename: cstring; ppDb: ptr ptr sqlite3): cint {.importc,
     sqlitedecl.}
@@ -2479,13 +2495,18 @@ proc sqlite3_open*(filename: cstring; ppDb: ptr ptr sqlite3): cint {.importc,
            ##  *
            ##  * <dl>
            ##  * ^(<dt>[SQLITE_OPEN_READONLY]</dt>
-           ##  * <dd>The database is opened in read-only mode.  If the database does not
-           ##  * already exist, an error is returned.</dd>)^
+           ##  * <dd>The database is opened in read-only mode.  If the database does
+           ##  * not already exist, an error is returned.</dd>)^
            ##  *
            ##  * ^(<dt>[SQLITE_OPEN_READWRITE]</dt>
-           ##  * <dd>The database is opened for reading and writing if possible, or reading
-           ##  * only if the file is write protected by the operating system.  In either
-           ##  * case the database must already exist, otherwise an error is returned.</dd>)^
+           ##  * <dd>The database is opened for reading and writing if possible, or
+           ##  * reading only if the file is write protected by the operating
+           ##  * system.  In either case the database must already exist, otherwise
+           ##  * an error is returned.  For historical reasons, if opening in
+           ##  * read-write mode fails due to OS-level permissions, an attempt is
+           ##  * made to open it in read-only mode. [sqlite3_db_readonly()] can be
+           ##  * used to determine whether the database is actually
+           ##  * read-write.</dd>)^
            ##  *
            ##  * ^(<dt>[SQLITE_OPEN_READWRITE] | [SQLITE_OPEN_CREATE]</dt>
            ##  * <dd>The database is opened for reading and writing, and is created if
@@ -4247,16 +4268,6 @@ proc sqlite3_value_blob*(a1: ptr sqlite3_value): pointer {.importc, sqlitedecl.}
                                                                            ##  * then the conversion is performed.  Otherwise no conversion occurs.
                                                                            ##  * The [SQLITE_INTEGER | datatype] after conversion is returned.)^
                                                                            ##  *
-                                                                           ##  * ^(The sqlite3_value_encoding(X) interface returns one of [SQLITE_UTF8],
-                                                                           ##  * [SQLITE_UTF16BE], or [SQLITE_UTF16LE] according to the current encoding
-                                                                           ##  * of the value X, assuming that X has type TEXT.)^  If sqlite3_value_type(X)
-                                                                           ##  * returns something other than SQLITE_TEXT, then the return value from
-                                                                           ##  * sqlite3_value_encoding(X) is meaningless.  ^Calls to
-                                                                           ##  * sqlite3_value_text(X), sqlite3_value_text16(X), sqlite3_value_text16be(X),
-                                                                           ##  * sqlite3_value_text16le(X), sqlite3_value_bytes(X), or
-                                                                           ##  * sqlite3_value_bytes16(X) might change the encoding of the value X and
-                                                                           ##  * thus change the return from subsequent calls to sqlite3_value_encoding(X).
-                                                                           ##  *
                                                                            ##  * ^Within the [xUpdate] method of a [virtual table], the
                                                                            ##  * sqlite3_value_nochange(X) interface returns true if and only if
                                                                            ##  * the column corresponding to X is unchanged by the UPDATE operation
@@ -4322,6 +4333,26 @@ proc sqlite3_value_numeric_type*(a1: ptr sqlite3_value): cint {.importc, sqlited
 proc sqlite3_value_nochange*(a1: ptr sqlite3_value): cint {.importc, sqlitedecl.}
 proc sqlite3_value_frombind*(a1: ptr sqlite3_value): cint {.importc, sqlitedecl.}
 proc sqlite3_value_encoding*(a1: ptr sqlite3_value): cint {.importc, sqlitedecl.}
+  ## ```
+                                                                            ##   * CAPI3REF: Report the internal text encoding state of an sqlite3_value object
+                                                                            ##  * METHOD: sqlite3_value
+                                                                            ##  *
+                                                                            ##  * ^(The sqlite3_value_encoding(X) interface returns one of [SQLITE_UTF8],
+                                                                            ##  * [SQLITE_UTF16BE], or [SQLITE_UTF16LE] according to the current text encoding
+                                                                            ##  * of the value X, assuming that X has type TEXT.)^  If sqlite3_value_type(X)
+                                                                            ##  * returns something other than SQLITE_TEXT, then the return value from
+                                                                            ##  * sqlite3_value_encoding(X) is meaningless.  ^Calls to
+                                                                            ##  * [sqlite3_value_text(X)], [sqlite3_value_text16(X)], [sqlite3_value_text16be(X)],
+                                                                            ##  * [sqlite3_value_text16le(X)], [sqlite3_value_bytes(X)], or
+                                                                            ##  * [sqlite3_value_bytes16(X)] might change the encoding of the value X and
+                                                                            ##  * thus change the return from subsequent calls to sqlite3_value_encoding(X).
+                                                                            ##  *
+                                                                            ##  * This routine is intended for used by applications that test and validate
+                                                                            ##  * the SQLite implementation.  This routine is inquiring about the opaque
+                                                                            ##  * internal state of an [sqlite3_value] object.  Ordinary applications should
+                                                                            ##  * not need to know what the internal state of an sqlite3_value object is and
+                                                                            ##  * hence should not need to use this interface.
+                                                                            ## ```
 proc sqlite3_value_subtype*(a1: ptr sqlite3_value): cuint {.importc, sqlitedecl.}
   ## ```
                                                                             ##   * CAPI3REF: Finding The Subtype Of SQL Values
@@ -7089,21 +7120,20 @@ proc sqlite3_vtab_in_first*(pVal: ptr sqlite3_value;
                                                                                   ##  * is undefined and probably harmful.
                                                                                   ##  *
                                                                                   ##  * The X parameter in a call to sqlite3_vtab_in_first(X,P) or
-                                                                                  ##  * sqlite3_vtab_in_next(X,P) must be one of the parameters to the
+                                                                                  ##  * sqlite3_vtab_in_next(X,P) should be one of the parameters to the
                                                                                   ##  * xFilter method which invokes these routines, and specifically
                                                                                   ##  * a parameter that was previously selected for all-at-once IN constraint
                                                                                   ##  * processing use the [sqlite3_vtab_in()] interface in the
                                                                                   ##  * [xBestIndex|xBestIndex method].  ^(If the X parameter is not
                                                                                   ##  * an xFilter argument that was selected for all-at-once IN constraint
-                                                                                  ##  * processing, then these routines return [SQLITE_MISUSE])^ or perhaps
-                                                                                  ##  * exhibit some other undefined or harmful behavior.
+                                                                                  ##  * processing, then these routines return [SQLITE_ERROR].)^
                                                                                   ##  *
                                                                                   ##  * ^(Use these routines to access all values on the right-hand side
                                                                                   ##  * of the IN constraint using code like the following:
                                                                                   ##  *
                                                                                   ##  * <blockquote><pre>
                                                                                   ##  * &nbsp;  for(rc=sqlite3_vtab_in_first(pList, &pVal);
-                                                                                  ##  * &nbsp;      rc==SQLITE_OK && pVal
+                                                                                  ##  * &nbsp;      rc==SQLITE_OK && pVal;
                                                                                   ##  * &nbsp;      rc=sqlite3_vtab_in_next(pList, &pVal)
                                                                                   ##  * &nbsp;  ){
                                                                                   ##  * &nbsp;     do something with pVal
@@ -7178,7 +7208,7 @@ proc sqlite3_stmt_scanstatus*(pStmt: ptr sqlite3_stmt; idx: cint;
                     ##   * CAPI3REF: Prepared Statement Scan Status
                     ##  * METHOD: sqlite3_stmt
                     ##  *
-                    ##  * This interface returns information about the predicted and measured
+                    ##  * These interfaces return information about the predicted and measured
                     ##  * performance for pStmt.  Advanced applications can use this
                     ##  * interface to compare the predicted and the measured performance and
                     ##  * issue warnings and/or rerun [ANALYZE] if discrepancies are found.
@@ -7189,22 +7219,31 @@ proc sqlite3_stmt_scanstatus*(pStmt: ptr sqlite3_stmt; idx: cint;
                     ##  *
                     ##  * The "iScanStatusOp" parameter determines which status information to return.
                     ##  * The "iScanStatusOp" must be one of the [scanstatus options] or the behavior
-                    ##  * of this interface is undefined.
-                    ##  * ^The requested measurement is written into a variable pointed to by
-                    ##  * the "pOut" parameter.
-                    ##  * Parameter "idx" identifies the specific loop to retrieve statistics for.
-                    ##  * Loops are numbered starting from zero. ^If idx is out of range - less than
-                    ##  * zero or greater than or equal to the total number of loops used to implement
-                    ##  * the statement - a non-zero value is returned and the variable that pOut
-                    ##  * points to is unchanged.
+                    ##  * of this interface is undefined. ^The requested measurement is written into
+                    ##  * a variable pointed to by the "pOut" parameter.
                     ##  *
-                    ##  * ^Statistics might not be available for all loops in all statements. ^In cases
-                    ##  * where there exist loops with no available statistics, this function behaves
-                    ##  * as if the loop did not exist - it returns non-zero and leave the variable
-                    ##  * that pOut points to unchanged.
+                    ##  * The "flags" parameter must be passed a mask of flags. At present only
+                    ##  * one flag is defined - SQLITE_SCANSTAT_COMPLEX. If SQLITE_SCANSTAT_COMPLEX
+                    ##  * is specified, then status information is available for all elements
+                    ##  * of a query plan that are reported by "EXPLAIN QUERY PLAN" output. If
+                    ##  * SQLITE_SCANSTAT_COMPLEX is not specified, then only query plan elements
+                    ##  * that correspond to query loops (the "SCAN..." and "SEARCH..." elements of
+                    ##  * the EXPLAIN QUERY PLAN output) are available. Invoking API
+                    ##  * sqlite3_stmt_scanstatus() is equivalent to calling
+                    ##  * sqlite3_stmt_scanstatus_v2() with a zeroed flags parameter.
+                    ##  *
+                    ##  * Parameter "idx" identifies the specific query element to retrieve statistics
+                    ##  * for. Query elements are numbered starting from zero. A value of -1 may be
+                    ##  * to query for statistics regarding the entire query. ^If idx is out of range
+                    ##  * - less than -1 or greater than or equal to the total number of query
+                    ##  * elements used to implement the statement - a non-zero value is returned and
+                    ##  * the variable that pOut points to is unchanged.
                     ##  *
                     ##  * See also: [sqlite3_stmt_scanstatus_reset()]
                     ## ```
+proc sqlite3_stmt_scanstatus_v2*(pStmt: ptr sqlite3_stmt; idx: cint;
+                                 iScanStatusOp: cint; flags: cint; pOut: pointer): cint {.
+    importc, sqlitedecl.}
 proc sqlite3_stmt_scanstatus_reset*(a1: ptr sqlite3_stmt) {.importc, sqlitedecl.}
   ## ```
                                                                             ##   * CAPI3REF: Zero Scan-Status Counters
@@ -7292,6 +7331,10 @@ proc sqlite3_system_errno*(a1: ptr sqlite3): cint {.importc, sqlitedecl.}
                                                                     ##  * or updated. The value of the seventh parameter passed to the callback
                                                                     ##  * function is not defined for operations on WITHOUT ROWID tables, or for
                                                                     ##  * DELETE operations on rowid tables.
+                                                                    ##  *
+                                                                    ##  * ^The sqlite3_preupdate_hook(D,C,P) function returns the P argument from
+                                                                    ##  * the previous call on the same [database connection] D, or NULL for
+                                                                    ##  * the first call on D.
                                                                     ##  *
                                                                     ##  * The [sqlite3_preupdate_old()], [sqlite3_preupdate_new()],
                                                                     ##  * [sqlite3_preupdate_count()], and [sqlite3_preupdate_depth()] interfaces
