@@ -6,4 +6,4 @@ license       = "Apache License 2.0 or MIT"
 installFiles  = @["sqlite3_abi.nim", "sqlite3_abi/sqlite3_gen.nim", "sqlite3_abi/sqlite3.c", "sqlite3_abi/sqlite3.h"]
 
 ### Dependencies
-requires "nim >= 1.6.0"
+requires "nim >= 0.18.1"
