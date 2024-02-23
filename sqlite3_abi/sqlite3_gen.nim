@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.44.2"
-  SQLITE_VERSION_NUMBER* = 3044002
-  SQLITE_SOURCE_ID* = "2023-11-24 11:41:44 ebead0e7230cd33bcec9f95d2183069565b9e709bf745c9b5db65cc0cbf92c0f"
+  SQLITE_VERSION* = "3.45.0"
+  SQLITE_VERSION_NUMBER* = 3045000
+  SQLITE_SOURCE_ID* = "2024-01-15 17:01:13 1066602b2b1976fe58b5150777cced894af17c803e068f5918390d6915b46e1d"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -483,6 +483,7 @@ const
   SQLITE_TESTCTRL_ASSERT* = 12
   SQLITE_TESTCTRL_ALWAYS* = 13
   SQLITE_TESTCTRL_RESERVE* = 14
+  SQLITE_TESTCTRL_JSON_SELFCHECK* = 14
   SQLITE_TESTCTRL_OPTIMIZATIONS* = 15
   SQLITE_TESTCTRL_ISKEYWORD* = 16
   SQLITE_TESTCTRL_SCRATCHMALLOC* = 17
@@ -1051,8 +1052,11 @@ type
                                          ##  *   created with the "columnsize=0" option.
                                          ##  *
                                          ##  * xColumnText:
-                                         ##  *   This function attempts to retrieve the text of column iCol of the
-                                         ##  *   current document. If successful, (*pz) is set to point to a buffer
+                                         ##  *   If parameter iCol is less than zero, or greater than or equal to the
+                                         ##  *   number of columns in the table, SQLITE_RANGE is returned.
+                                         ##  *
+                                         ##  *   Otherwise, this function attempts to retrieve the text of column iCol of
+                                         ##  *   the current document. If successful, (*pz) is set to point to a buffer
                                          ##  *   containing the text in utf-8 encoding, (*pn) is set to the size in bytes
                                          ##  *   (not characters) of the buffer and SQLITE_OK is returned. Otherwise,
                                          ##  *   if an error occurs, an SQLite error code is returned and the final values
@@ -1062,8 +1066,10 @@ type
                                          ##  *   Returns the number of phrases in the current query expression.
                                          ##  *
                                          ##  * xPhraseSize:
-                                         ##  *   Returns the number of tokens in phrase iPhrase of the query. Phrases
-                                         ##  *   are numbered starting from zero.
+                                         ##  *   If parameter iCol is less than zero, or greater than or equal to the
+                                         ##  *   number of phrases in the current query, as returned by xPhraseCount,
+                                         ##  *   0 is returned. Otherwise, this function returns the number of tokens in
+                                         ##  *   phrase iPhrase of the query. Phrases are numbered starting from zero.
                                          ##  *
                                          ##  * xInstCount:
                                          ##  *   SetpnInst to the total number of occurrences of all phrases within
@@ -1079,12 +1085,13 @@ type
                                          ##  *   Query for the details of phrase match iIdx within the current row.
                                          ##  *   Phrase matches are numbered starting from zero, so the iIdx argument
                                          ##  *   should be greater than or equal to zero and smaller than the value
-                                         ##  *   output by xInstCount().
+                                         ##  *   output by xInstCount(). If iIdx is less than zero or greater than
+                                         ##  *   or equal to the value returned by xInstCount(), SQLITE_RANGE is returned.
                                          ##  *
-                                         ##  *   Usually, output parameterpiPhrase is set to the phrase number,piCol
+                                         ##  *   Otherwise, output parameterpiPhrase is set to the phrase number,piCol
                                          ##  *   to the column in which it occurs andpiOff the token offset of the
-                                         ##  *   first token of the phrase. Returns SQLITE_OK if successful, or an error
-                                         ##  *   code (i.e. SQLITE_NOMEM) if an error occurs.
+                                         ##  *   first token of the phrase. SQLITE_OK is returned if successful, or an
+                                         ##  *   error code (i.e. SQLITE_NOMEM) if an error occurs.
                                          ##  *
                                          ##  *   This API can be quite slow if used with an FTS5 table created with the
                                          ##  *   "detail=none" or "detail=column" option.
@@ -1109,6 +1116,10 @@ type
                                          ##  *   function may be used to access the properties of each matched row.
                                          ##  *   Invoking Api.xUserData() returns a copy of the pointer passed as
                                          ##  *   the third argument to pUserData.
+                                         ##  *
+                                         ##  *   If parameter iPhrase is less than zero, or greater than or equal to
+                                         ##  *   the number of phrases in the query, as returned by xPhraseCount(),
+                                         ##  *   this function returns SQLITE_RANGE.
                                          ##  *
                                          ##  *   If the callback function returns any value other than SQLITE_OK, the
                                          ##  *   query is abandoned and the xQueryPhrase function returns immediately.
@@ -1224,9 +1235,42 @@ type
                                          ##  *
                                          ##  * xPhraseNextColumn()
                                          ##  *   See xPhraseFirstColumn above.
+                                         ##  *
+                                         ##  * xQueryToken(pFts5, iPhrase, iToken, ppToken, pnToken)
+                                         ##  *   This is used to access token iToken of phrase iPhrase of the current
+                                         ##  *   query. Before returning, output parameterppToken is set to point
+                                         ##  *   to a buffer containing the requested token, andpnToken to the
+                                         ##  *   size of this buffer in bytes.
+                                         ##  *
+                                         ##  *   If iPhrase or iToken are less than zero, or if iPhrase is greater than
+                                         ##  *   or equal to the number of phrases in the query as reported by
+                                         ##  *   xPhraseCount(), or if iToken is equal to or greater than the number of
+                                         ##  *   tokens in the phrase, SQLITE_RANGE is returned andppToken andpnToken
+                                         ##        are both zeroed.
+                                         ##  *
+                                         ##  *   The output text is not a copy of the query text that specified the
+                                         ##  *   token. It is the output of the tokenizer module. For tokendata=1
+                                         ##  *   tables, this includes any embedded 0x00 and trailing data.
+                                         ##  *
+                                         ##  * xInstToken(pFts5, iIdx, iToken, ppToken, pnToken)
+                                         ##  *   This is used to access token iToken of phrase hit iIdx within the
+                                         ##  *   current row. If iIdx is less than zero or greater than or equal to the
+                                         ##  *   value returned by xInstCount(), SQLITE_RANGE is returned.  Otherwise,
+                                         ##  *   output variable (*ppToken) is set to point to a buffer containing the
+                                         ##  *   matching document token, and (*pnToken) to the size of that buffer in
+                                         ##  *   bytes. This API is not available if the specified token matches a
+                                         ##  *   prefix query term. In that case both output variables are always set
+                                         ##  *   to 0.
+                                         ##  *
+                                         ##  *   The output text is not a copy of the document text that was tokenized.
+                                         ##  *   It is the output of the tokenizer module. For tokendata=1 tables, this
+                                         ##  *   includes any embedded 0x00 and trailing data.
+                                         ##  *
+                                         ##  *   This API can be quite slow if used with an FTS5 table created with the
+                                         ##  *   "detail=none" or "detail=column" option.
                                          ## ```
     iVersion*: cint          ## ```
-                             ##   Currently always set to 2
+                             ##   Currently always set to 3
                              ## ```
     xUserData*: proc (a1: ptr Fts5Context): pointer {.sqlitedecl.}
     xColumnCount*: proc (a1: ptr Fts5Context): cint {.sqlitedecl.}
@@ -1263,6 +1307,12 @@ type
         sqlitedecl.}
     xPhraseNextColumn*: proc (a1: ptr Fts5Context; a2: ptr Fts5PhraseIter;
                               piCol: ptr cint) {.sqlitedecl.}
+    xQueryToken*: proc (a1: ptr Fts5Context; iPhrase: cint; iToken: cint;
+                        ppToken: ptr cstring; pnToken: ptr cint): cint {.sqlitedecl.} ## ```
+                                                                                 ##   Below this point are iVersion>=3 only
+                                                                                 ## ```
+    xInstToken*: proc (a1: ptr Fts5Context; iIdx: cint; iToken: cint;
+                       a4: ptr cstring; a5: ptr cint): cint {.sqlitedecl.}
 
   Fts5Context* {.incompleteStruct.} = object
   Fts5PhraseIter* {.bycopy.} = object
@@ -2964,15 +3014,17 @@ proc sqlite3_errcode*(db: ptr sqlite3): cint {.importc, sqlitedecl.}
                                                                ##  * </ul>
                                                                ##  *
                                                                ##  * ^The sqlite3_errmsg() and sqlite3_errmsg16() return English-language
-                                                               ##  * text that describes the error, as either UTF-8 or UTF-16 respectively.
+                                                               ##  * text that describes the error, as either UTF-8 or UTF-16 respectively,
+                                                               ##  * or NULL if no error message is available.
                                                                ##  * (See how SQLite handles [invalid UTF] for exceptions to this rule.)
                                                                ##  * ^(Memory to hold the error message string is managed internally.
                                                                ##  * The application does not need to worry about freeing the result.
                                                                ##  * However, the error string might be overwritten or deallocated by
                                                                ##  * subsequent calls to other SQLite interface functions.)^
                                                                ##  *
-                                                               ##  * ^The sqlite3_errstr() interface returns the English-language text
-                                                               ##  * that describes the [result code], as UTF-8.
+                                                               ##  * ^The sqlite3_errstr(E) interface returns the English-language text
+                                                               ##  * that describes the [result code] E, as UTF-8, or NULL if E is not an
+                                                               ##  * result code for which a text error message is available.
                                                                ##  * ^(Memory to hold the error message string is managed internally
                                                                ##  * and must not be freed by the application)^.
                                                                ##  *
@@ -6129,9 +6181,11 @@ proc sqlite3_mutex_alloc*(a1: cint): ptr sqlite3_mutex {.importc, sqlitedecl.}
                                                                          ##  *
                                                                          ##  * ^(Some systems (for example, Windows 95) do not support the operation
                                                                          ##  * implemented by sqlite3_mutex_try().  On those systems, sqlite3_mutex_try()
-                                                                         ##  * will always return SQLITE_BUSY. The SQLite core only ever uses
-                                                                         ##  * sqlite3_mutex_try() as an optimization so this is acceptable
-                                                                         ##  * behavior.)^
+                                                                         ##  * will always return SQLITE_BUSY. In most cases the SQLite core only uses
+                                                                         ##  * sqlite3_mutex_try() as an optimization, so this is acceptable
+                                                                         ##  * behavior. The exceptions are unix builds that set the
+                                                                         ##  * SQLITE_ENABLE_SETLK_TIMEOUT build option. In that case a working
+                                                                         ##  * sqlite3_mutex_try() is required.)^
                                                                          ##  *
                                                                          ##  * ^The sqlite3_mutex_leave() routine exits a mutex that was
                                                                          ##  * previously entered by the same thread.   The behavior
