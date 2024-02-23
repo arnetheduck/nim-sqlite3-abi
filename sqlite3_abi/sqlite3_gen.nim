@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.44.0"
-  SQLITE_VERSION_NUMBER* = 3044000
-  SQLITE_SOURCE_ID* = "2023-11-01 11:23:50 17129ba1ff7f0daf37100ee82d507aef7827cf38de1866e2633096ae6ad81301"
+  SQLITE_VERSION* = "3.44.1"
+  SQLITE_VERSION_NUMBER* = 3044001
+  SQLITE_SOURCE_ID* = "2023-11-22 14:18:12 d295f48e8f367b066b881780c98bdf980a1d550397d5ba0b0e49842c95b3e8b4"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -430,6 +430,7 @@ const
   SQLITE_DIRECTONLY* = 0x00080000
   SQLITE_SUBTYPE* = 0x00100000
   SQLITE_INNOCUOUS* = 0x00200000
+  SQLITE_RESULT_SUBTYPE* = 0x01000000
   SQLITE_WIN32_DATA_DIRECTORY_TYPE* = 1
   SQLITE_WIN32_TEMP_DIRECTORY_TYPE* = 2
   SQLITE_TXN_NONE* = 0
@@ -4430,6 +4431,12 @@ proc sqlite3_value_subtype*(a1: ptr sqlite3_value): cuint {.importc, sqlitedecl.
                                                                             ##  * information can be used to pass a limited amount of context from
                                                                             ##  * one SQL function to another.  Use the [sqlite3_result_subtype()]
                                                                             ##  * routine to set the subtype for the return value of an SQL function.
+                                                                            ##  *
+                                                                            ##  * Every [application-defined SQL function] that invoke this interface
+                                                                            ##  * should include the [SQLITE_SUBTYPE] property in the text
+                                                                            ##  * encoding argument when the function is [sqlite3_create_function|registered].
+                                                                            ##  * If the [SQLITE_SUBTYPE] property is omitted, then sqlite3_value_subtype()
+                                                                            ##  * might return zero instead of the upstream subtype in some corner cases.
                                                                             ## ```
 proc sqlite3_value_dup*(a1: ptr sqlite3_value): ptr sqlite3_value {.importc,
     sqlitedecl.}
@@ -4559,14 +4566,22 @@ proc sqlite3_get_auxdata*(a1: ptr sqlite3_context; N: cint): pointer {.importc,
            ##  * <li> ^(when sqlite3_set_auxdata() is invoked again on the same
            ##  *       parameter)^, or
            ##  * <li> ^(during the original sqlite3_set_auxdata() call when a memory
-           ##  *      allocation error occurs.)^ </ul>
+           ##  *      allocation error occurs.)^
+           ##  * <li> ^(during the original sqlite3_set_auxdata() call if the function
+           ##  *      is evaluated during query planning instead of during query execution,
+           ##  *      as sometimes happens with [SQLITE_ENABLE_STAT4].)^ </ul>
            ##  *
-           ##  * Note the last bullet in particular.  The destructor X in
+           ##  * Note the last two bullets in particular.  The destructor X in
            ##  * sqlite3_set_auxdata(C,N,P,X) might be called immediately, before the
            ##  * sqlite3_set_auxdata() interface even returns.  Hence sqlite3_set_auxdata()
            ##  * should be called near the end of the function implementation and the
            ##  * function implementation should not make any use of P after
-           ##  * sqlite3_set_auxdata() has been called.
+           ##  * sqlite3_set_auxdata() has been called.  Furthermore, a call to
+           ##  * sqlite3_get_auxdata() that occurs immediately after a corresponding call
+           ##  * to sqlite3_set_auxdata() might still return NULL if an out-of-memory
+           ##  * condition occurred during the sqlite3_set_auxdata() call or if the
+           ##  * function is being evaluated during query planning rather than during
+           ##  * query execution.
            ##  *
            ##  * ^(In practice, auxiliary data is preserved between function calls for
            ##  * function parameters that are compile-time constants, including literal
@@ -4836,6 +4851,20 @@ proc sqlite3_result_subtype*(a1: ptr sqlite3_context; a2: cuint) {.importc,
            ##  * higher order bits are discarded.
            ##  * The number of subtype bytes preserved by SQLite might increase
            ##  * in future releases of SQLite.
+           ##  *
+           ##  * Every [application-defined SQL function] that invokes this interface
+           ##  * should include the [SQLITE_RESULT_SUBTYPE] property in its
+           ##  * text encoding argument when the SQL function is
+           ##  * [sqlite3_create_function|registered].  If the [SQLITE_RESULT_SUBTYPE]
+           ##  * property is omitted from the function that invokes sqlite3_result_subtype(),
+           ##  * then in some cases the sqlite3_result_subtype() might fail to set
+           ##  * the result subtype.
+           ##  *
+           ##  * If SQLite is compiled with -DSQLITE_STRICT_SUBTYPE=1, then any
+           ##  * SQL function that invokes the sqlite3_result_subtype() interface
+           ##  * and that does not have the SQLITE_RESULT_SUBTYPE property will raise
+           ##  * an error.  Future versions of SQLite might enable -DSQLITE_STRICT_SUBTYPE=1
+           ##  * by default.
            ## ```
 proc sqlite3_create_collation*(a1: ptr sqlite3; zName: cstring; eTextRep: cint;
                                pArg: pointer; xCompare: proc (a1: pointer;
