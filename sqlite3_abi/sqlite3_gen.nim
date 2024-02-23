@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.42.0"
-  SQLITE_VERSION_NUMBER* = 3042000
-  SQLITE_SOURCE_ID* = "2023-05-16 12:36:15 831d0fb2836b71c9bc51067c49fee4b8f18047814f2ff22d817d25195cf350b0"
+  SQLITE_VERSION* = "3.43.0"
+  SQLITE_VERSION_NUMBER* = 3043000
+  SQLITE_SOURCE_ID* = "2023-08-24 12:36:59 0f80b798b3f4b81a7bb4233c58294edd0f1156f36b6ecf5ab8e83631d468778c"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -133,6 +133,8 @@ const
     SQLITE_IOERR or typeof(SQLITE_IOERR)((32 shl typeof(SQLITE_IOERR)(8))))
   SQLITE_IOERR_CORRUPTFS* = (
     SQLITE_IOERR or typeof(SQLITE_IOERR)((33 shl typeof(SQLITE_IOERR)(8))))
+  SQLITE_IOERR_IN_PAGE* = (
+    SQLITE_IOERR or typeof(SQLITE_IOERR)((34 shl typeof(SQLITE_IOERR)(8))))
   SQLITE_LOCKED_SHAREDCACHE* = (
     SQLITE_LOCKED or typeof(SQLITE_LOCKED)((1 shl typeof(SQLITE_LOCKED)(8))))
   SQLITE_LOCKED_VTAB* = (
@@ -500,7 +502,8 @@ const
   SQLITE_TESTCTRL_TRACEFLAGS* = 31
   SQLITE_TESTCTRL_TUNE* = 32
   SQLITE_TESTCTRL_LOGEST* = 33
-  SQLITE_TESTCTRL_LAST* = 33
+  SQLITE_TESTCTRL_USELONGDOUBLE* = 34
+  SQLITE_TESTCTRL_LAST* = 34
   SQLITE_STATUS_MEMORY_USED* = 0
   SQLITE_STATUS_PAGECACHE_USED* = 1
   SQLITE_STATUS_PAGECACHE_OVERFLOW* = 2
@@ -1215,7 +1218,7 @@ type
                                          ##  *   See xPhraseFirstColumn above.
                                          ## ```
     iVersion*: cint          ## ```
-                             ##   Currently always set to 3
+                             ##   Currently always set to 2
                              ## ```
     xUserData*: proc (a1: ptr Fts5Context): pointer {.sqlitedecl.}
     xColumnCount*: proc (a1: ptr Fts5Context): cint {.sqlitedecl.}
@@ -1278,19 +1281,19 @@ type
                              ##      Create a new tokenizer
                              ## ```
     xCreateTokenizer*: proc (pApi: ptr fts5_api; zName: cstring;
-                             pContext: pointer; pTokenizer: ptr fts5_tokenizer;
+                             pUserData: pointer; pTokenizer: ptr fts5_tokenizer;
                              xDestroy: proc (a1: pointer) {.sqlitedecl.}): cint {.
         sqlitedecl.}              ## ```
                              ##   Currently always set to 2 
                              ##      Create a new tokenizer
                              ## ```
     xFindTokenizer*: proc (pApi: ptr fts5_api; zName: cstring;
-                           ppContext: ptr pointer;
+                           ppUserData: ptr pointer;
                            pTokenizer: ptr fts5_tokenizer): cint {.sqlitedecl.} ## ```
                                                                            ##   Find an existing tokenizer
                                                                            ## ```
     xCreateFunction*: proc (pApi: ptr fts5_api; zName: cstring;
-                            pContext: pointer;
+                            pUserData: pointer;
                             xFunction: fts5_extension_function;
                             xDestroy: proc (a1: pointer) {.sqlitedecl.}): cint {.
         sqlitedecl.}              ## ```
@@ -1893,6 +1896,7 @@ proc sqlite3_interrupt*(a1: ptr sqlite3) {.importc, sqlitedecl.}
                                                            ##  *
                                                            ##  * ^The [sqlite3_is_interrupted(D)] interface can be used to determine whether
                                                            ##  * or not an interrupt is currently in effect for [database connection] D.
+                                                           ##  * It returns 1 if an interrupt is currently in effect, or 0 otherwise.
                                                            ## ```
 proc sqlite3_is_interrupted*(a1: ptr sqlite3): cint {.importc, sqlitedecl.}
 proc sqlite3_complete*(sql: cstring): cint {.importc, sqlitedecl.}
@@ -2406,8 +2410,10 @@ proc sqlite3_trace_v2*(a1: ptr sqlite3; uMask: cuint; xCallback: proc (
                                                               ##  * M argument should be the bitwise OR-ed combination of
                                                               ##  * zero or more [SQLITE_TRACE] constants.
                                                               ##  *
-                                                              ##  * ^Each call to either sqlite3_trace() or sqlite3_trace_v2() overrides
-                                                              ##  * (cancels) any prior calls to sqlite3_trace() or sqlite3_trace_v2().
+                                                              ##  * ^Each call to either sqlite3_trace(D,X,P) or sqlite3_trace_v2(D,M,X,P)
+                                                              ##  * overrides (cancels) all prior calls to sqlite3_trace(D,X,P) or
+                                                              ##  * sqlite3_trace_v2(D,M,X,P) for the [database connection] D.  Each
+                                                              ##  * database connection may have at most one trace callback.
                                                               ##  *
                                                               ##  * ^The X callback is invoked whenever any of the events identified by
                                                               ##  * mask M occur.  ^The integer return value from the callback is currently
@@ -2763,7 +2769,7 @@ proc sqlite3_uri_parameter*(z: sqlite3_filename; zParam: cstring): cstring {.
                     ##  * as F) must be one of:
                     ##  * <ul>
                     ##  * <li> A database filename pointer created by the SQLite core and
-                    ##  * passed into the xOpen() method of a VFS implemention, or
+                    ##  * passed into the xOpen() method of a VFS implementation, or
                     ##  * <li> A filename obtained from [sqlite3_db_filename()], or
                     ##  * <li> A new filename constructed using [sqlite3_create_filename()].
                     ##  * </ul>
@@ -2878,7 +2884,7 @@ proc sqlite3_create_filename*(zDatabase: cstring; zJournal: cstring;
   ## ```
                     ##   * CAPI3REF: Create and Destroy VFS Filenames
                     ##  *
-                    ##  * These interfces are provided for use by [VFS shim] implementations and
+                    ##  * These interfaces are provided for use by [VFS shim] implementations and
                     ##  * are not useful outside of that context.
                     ##  *
                     ##  * The sqlite3_create_filename(D,J,W,N,P) allocates memory to hold a version of
@@ -3249,6 +3255,41 @@ proc sqlite3_stmt_isexplain*(pStmt: ptr sqlite3_stmt): cint {.importc, sqlitedec
                                                                               ##  * ^The sqlite3_stmt_isexplain(S) interface returns 0 if S is
                                                                               ##  * an ordinary statement or a NULL pointer.
                                                                               ## ```
+proc sqlite3_stmt_explain*(pStmt: ptr sqlite3_stmt; eMode: cint): cint {.
+    importc, sqlitedecl.}
+  ## ```
+                    ##   * CAPI3REF: Change The EXPLAIN Setting For A Prepared Statement
+                    ##  * METHOD: sqlite3_stmt
+                    ##  *
+                    ##  * The sqlite3_stmt_explain(S,E) interface changes the EXPLAIN
+                    ##  * setting for [prepared statement] S.  If E is zero, then S becomes
+                    ##  * a normal prepared statement.  If E is 1, then S behaves as if
+                    ##  * its SQL text began with "[EXPLAIN]".  If E is 2, then S behaves as if
+                    ##  * its SQL text began with "[EXPLAIN QUERY PLAN]".
+                    ##  *
+                    ##  * Calling sqlite3_stmt_explain(S,E) might cause S to be reprepared.
+                    ##  * SQLite tries to avoid a reprepare, but a reprepare might be necessary
+                    ##  * on the first transition into EXPLAIN or EXPLAIN QUERY PLAN mode.
+                    ##  *
+                    ##  * Because of the potential need to reprepare, a call to
+                    ##  * sqlite3_stmt_explain(S,E) will fail with SQLITE_ERROR if S cannot be
+                    ##  * reprepared because it was created using [sqlite3_prepare()] instead of
+                    ##  * the newer [sqlite3_prepare_v2()] or [sqlite3_prepare_v3()] interfaces and
+                    ##  * hence has no saved SQL text with which to reprepare.
+                    ##  *
+                    ##  * Changing the explain setting for a prepared statement does not change
+                    ##  * the original SQL text for the statement.  Hence, if the SQL text originally
+                    ##  * began with EXPLAIN or EXPLAIN QUERY PLAN, but sqlite3_stmt_explain(S,0)
+                    ##  * is called to convert the statement into an ordinary statement, the EXPLAIN
+                    ##  * or EXPLAIN QUERY PLAN keywords will still appear in the sqlite3_sql(S)
+                    ##  * output, even though the statement now acts like a normal SQL statement.
+                    ##  *
+                    ##  * This routine returns SQLITE_OK if the explain mode is successfully
+                    ##  * changed, or an error code if the explain mode could not be changed.
+                    ##  * The explain mode cannot be changed while a statement is active.
+                    ##  * Hence, it is good practice to call [sqlite3_reset(S)]
+                    ##  * immediately prior to calling sqlite3_stmt_explain(S,E).
+                    ## ```
 proc sqlite3_stmt_busy*(a1: ptr sqlite3_stmt): cint {.importc, sqlitedecl.}
   ## ```
                                                                       ##   * CAPI3REF: Determine If A Prepared Statement Has Been Reset
@@ -3355,7 +3396,7 @@ proc sqlite3_bind_blob*(a1: ptr sqlite3_stmt; a2: cint; a3: pointer; n: cint;
                                                                                   ##  * with it may be passed. ^It is called to dispose of the BLOB or string even
                                                                                   ##  * if the call to the bind API fails, except the destructor is not called if
                                                                                   ##  * the third parameter is a NULL pointer or the fourth parameter is negative.
-                                                                                  ##  * ^ (2) The special constant, [SQLITE_STATIC], may be passsed to indicate that
+                                                                                  ##  * ^ (2) The special constant, [SQLITE_STATIC], may be passed to indicate that
                                                                                   ##  * the application remains responsible for disposing of the object. ^In this
                                                                                   ##  * case, the object and the provided pointer to it must remain valid until
                                                                                   ##  * either the prepared statement is finalized or the same SQL parameter is
@@ -4024,14 +4065,26 @@ proc sqlite3_reset*(pStmt: ptr sqlite3_stmt): cint {.importc, sqlitedecl.}
                                                                      ##  * ^The [sqlite3_reset(S)] interface resets the [prepared statement] S
                                                                      ##  * back to the beginning of its program.
                                                                      ##  *
-                                                                     ##  * ^If the most recent call to [sqlite3_step(S)] for the
-                                                                     ##  * [prepared statement] S returned [SQLITE_ROW] or [SQLITE_DONE],
-                                                                     ##  * or if [sqlite3_step(S)] has never before been called on S,
-                                                                     ##  * then [sqlite3_reset(S)] returns [SQLITE_OK].
+                                                                     ##  * ^The return code from [sqlite3_reset(S)] indicates whether or not
+                                                                     ##  * the previous evaluation of prepared statement S completed successfully.
+                                                                     ##  * ^If [sqlite3_step(S)] has never before been called on S or if
+                                                                     ##  * [sqlite3_step(S)] has not been called since the previous call
+                                                                     ##  * to [sqlite3_reset(S)], then [sqlite3_reset(S)] will return
+                                                                     ##  * [SQLITE_OK].
                                                                      ##  *
                                                                      ##  * ^If the most recent call to [sqlite3_step(S)] for the
                                                                      ##  * [prepared statement] S indicated an error, then
                                                                      ##  * [sqlite3_reset(S)] returns an appropriate [error code].
+                                                                     ##  * ^The [sqlite3_reset(S)] interface might also return an [error code]
+                                                                     ##  * if there were no prior errors but the process of resetting
+                                                                     ##  * the prepared statement caused a new error. ^For example, if an
+                                                                     ##  * [INSERT] statement with a [RETURNING] clause is only stepped one time,
+                                                                     ##  * that one call to [sqlite3_step(S)] might return SQLITE_ROW but
+                                                                     ##  * the overall statement might still fail and the [sqlite3_reset(S)] call
+                                                                     ##  * might return SQLITE_BUSY if locking constraints prevent the
+                                                                     ##  * database change from committing.  Therefore, it is important that
+                                                                     ##  * applications check the return code from [sqlite3_reset(S)] even if
+                                                                     ##  * no prior call to [sqlite3_step(S)] indicated a problem.
                                                                      ##  *
                                                                      ##  * ^The [sqlite3_reset(S)] interface does not change the values
                                                                      ##  * of any [sqlite3_bind_blob|bindings] on the [prepared statement] S.
@@ -6558,8 +6611,8 @@ proc sqlite3_unlock_notify*(pBlocked: ptr sqlite3; xNotify: proc (
                     ##  * blocked connection already has a registered unlock-notify callback,
                     ##  * then the new callback replaces the old.)^ ^If sqlite3_unlock_notify() is
                     ##  * called with a NULL pointer as its second argument, then any existing
-                    ##  * unlock-notify callback is canceled. ^The blocked connections
-                    ##  * unlock-notify callback may also be canceled by closing the blocked
+                    ##  * unlock-notify callback is cancelled. ^The blocked connections
+                    ##  * unlock-notify callback may also be cancelled by closing the blocked
                     ##  * connection using [sqlite3_close()].
                     ##  *
                     ##  * The unlock-notify callback is not reentrant. If an application invokes
@@ -7064,7 +7117,7 @@ proc sqlite3_vtab_in*(a1: ptr sqlite3_index_info; iCons: cint; bHandle: cint): c
                     ##  * communicated to the xBestIndex method as a
                     ##  * [SQLITE_INDEX_CONSTRAINT_EQ] constraint.)^  If xBestIndex wants to use
                     ##  * this constraint, it must set the corresponding
-                    ##  * aConstraintUsage[].argvIndex to a postive integer.  ^(Then, under
+                    ##  * aConstraintUsage[].argvIndex to a positive integer.  ^(Then, under
                     ##  * the usual mode of handling IN operators, SQLite generates [bytecode]
                     ##  * that invokes the [xFilter|xFilter() method] once for each value
                     ##  * on the right-hand side of the IN operator.)^  Thus the virtual table
@@ -7388,7 +7441,7 @@ proc sqlite3_system_errno*(a1: ptr sqlite3): cint {.importc, sqlitedecl.}
                                                                     ##  * When the [sqlite3_blob_write()] API is used to update a blob column,
                                                                     ##  * the pre-update hook is invoked with SQLITE_DELETE. This is because the
                                                                     ##  * in this case the new values are not available. In this case, when a
-                                                                    ##  * callback made with op==SQLITE_DELETE is actuall a write using the
+                                                                    ##  * callback made with op==SQLITE_DELETE is actually a write using the
                                                                     ##  * sqlite3_blob_write() API, the [sqlite3_preupdate_blobwrite()] returns
                                                                     ##  * the index of the column being written. In other cases, where the
                                                                     ##  * pre-update hook is being invoked for some other reason, including a
