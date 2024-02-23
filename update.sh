@@ -2,6 +2,8 @@
 set -eu -o pipefail
 cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
+git diff --exit-code -- . ':(exclude)update.sh' > /dev/null || { echo "Commit changes before updating!" ; exit 1 ; }
+
 # https://www.sqlite.org/download.html
 MAJOR="${1:-3}"
 MINOR="${2:-42}"
@@ -35,9 +37,23 @@ sed -i.bak \
   -e "\|Generated @|d" \
   -e "s|$PWD/||g" \
   -e "s|$HOME|~|g" \
-  -e "s|--nim:/[^ ]*|--nim:nim|g" \
+  -e "s|--nim:[^ ]*|--nim:nim|g" \
   -e 's|{.experimental: "codeReordering".}|{.experimental: "codeReordering".}\nwhen (NimMajor, NimMinor) < (1, 4):\n  {.pragma: sqlitedecl, cdecl, gcsafe, raises: [Defect].}\nelse:\n  {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}|' \
   -e "s|sqlite3_column_text\\*(a1: ptr sqlite3_stmt; iCol: cint): ptr cuchar|sqlite3_column_text\\*(a1: ptr sqlite3_stmt; iCol: cint): cstring|" \
   -e "s|sqlite3_value_text\\*(a1: ptr sqlite3_value): ptr cuchar|sqlite3_value_text\\*(a1: ptr sqlite3_value): cstring|" \
   sqlite3_abi/sqlite3_gen.nim
 rm -f sqlite3_abi/sqlite3_gen.nim.bak  # Portable GNU/macOS `sed` needs backup
+
+sed -i.bak \
+  -e "s|version.*|version       = \"${MAJOR}.${MINOR}.${PATCH}.0\"|g" \
+  sqlite3_abi.nimble
+rm -f sqlite3_abi.nimble.bak  # Portable GNU/macOS `sed` needs backup
+
+! git diff --exit-code > /dev/null || { echo "This repository is already up to date" ; exit 0 ; }
+
+git commit -a \
+  -m "bump \`sqlite-amalgamation\` to \`${MAJOR}.${MINOR}.${PATCH}\`" \
+  -m "- https://www.sqlite.org/releaselog/${MAJOR}_${MINOR}_${PATCH}.html"
+
+echo "The repo has been updated with a commit recording the update."
+echo "You can review the changes with 'git diff HEAD^' before pushing to a public repository."
