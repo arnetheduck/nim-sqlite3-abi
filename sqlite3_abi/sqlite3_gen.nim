@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.45.3"
-  SQLITE_VERSION_NUMBER* = 3045003
-  SQLITE_SOURCE_ID* = "2024-04-15 13:34:05 8653b758870e6ef0c98d46b3ace27849054af85da891eb121e9aaa537f1e8355"
+  SQLITE_VERSION* = "3.46.0"
+  SQLITE_VERSION_NUMBER* = 3046000
+  SQLITE_SOURCE_ID* = "2024-05-23 13:25:27 96c92aba00c8375bc32fafcdf12429c58bd8aabfcadab6683e35bbb9cdebf19e"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -1020,8 +1020,8 @@ type
                                          ##   * EXTENSION API FUNCTIONS
                                          ##  *
                                          ##  * xUserData(pFts):
-                                         ##  *   Return a copy of the context pointer the extension function was
-                                         ##  *   registered with.
+                                         ##  *   Return a copy of the pUserData pointer passed to the xCreateFunction()
+                                         ##  *   API when the extension function was registered.
                                          ##  *
                                          ##  * xColumnTotalSize(pFts, iCol, pnToken):
                                          ##  *   If parameter iCol is less than zero, set output variablepnToken
@@ -2424,8 +2424,8 @@ proc sqlite3_trace*(a1: ptr sqlite3;
                     xTrace: proc (a1: pointer; a2: cstring) {.sqlitedecl.};
                     a3: pointer): pointer {.importc, sqlitedecl.}
   ## ```
-                                                            ##   * CAPI3REF: Tracing And Profiling Functions
-                                                            ##  * METHOD: sqlite3
+                                                            ##   * CAPI3REF: Deprecated Tracing And Profiling Functions
+                                                            ##  * DEPRECATED
                                                             ##  *
                                                             ##  * These routines are deprecated. Use the [sqlite3_trace_v2()] interface
                                                             ##  * instead of the routines described here.
@@ -5381,6 +5381,12 @@ proc sqlite3_update_hook*(a1: ptr sqlite3; a2: proc (a1: pointer; a2: cint;
                     ##  * The exceptions defined in this paragraph might change in a future
                     ##  * release of SQLite.
                     ##  *
+                    ##  * Whether the update hook is invoked before or after the
+                    ##  * corresponding change is currently unspecified and may differ
+                    ##  * depending on the type of change. Do not rely on the order of the
+                    ##  * hook call with regards to the final result of the operation which
+                    ##  * triggers the hook.
+                    ##  *
                     ##  * The update hook implementation must not do anything that will modify
                     ##  * the database connection that invoked the update hook.  Any actions
                     ##  * to modify the database connection must be deferred until after the
@@ -6291,7 +6297,7 @@ proc sqlite3_keyword_count*(): cint {.importc, sqlitedecl.}
                                                       ##  * The sqlite3_keyword_count() interface returns the number of distinct
                                                       ##  * keywords understood by SQLite.
                                                       ##  *
-                                                      ##  * The sqlite3_keyword_name(N,Z,L) interface finds the N-th keyword and
+                                                      ##  * The sqlite3_keyword_name(N,Z,L) interface finds the 0-based N-th keyword and
                                                       ##  * makesZ point to that keyword expressed as UTF8 and writes the number
                                                       ##  * of bytes in the keyword intoL.  The string thatZ points to is not
                                                       ##  * zero-terminated.  The sqlite3_keyword_name(N,Z,L) routine returns
@@ -7217,23 +7223,44 @@ proc sqlite3_vtab_distinct*(a1: ptr sqlite3_index_info): cint {.importc, sqlited
                                                                                 ##  * <li value="2"><p>
                                                                                 ##  * ^(If the sqlite3_vtab_distinct() interface returns 2, that means
                                                                                 ##  * that the query planner does not need the rows returned in any particular
-                                                                                ##  * order, as long as rows with the same values in all "aOrderBy" columns
-                                                                                ##  * are adjacent.)^  ^(Furthermore, only a single row for each particular
-                                                                                ##  * combination of values in the columns identified by the "aOrderBy" field
-                                                                                ##  * needs to be returned.)^  ^It is always ok for two or more rows with the same
-                                                                                ##  * values in all "aOrderBy" columns to be returned, as long as all such rows
-                                                                                ##  * are adjacent.  ^The virtual table may, if it chooses, omit extra rows
-                                                                                ##  * that have the same value for all columns identified by "aOrderBy".
-                                                                                ##  * ^However omitting the extra rows is optional.
+                                                                                ##  * order, as long as rows with the same values in all columns identified
+                                                                                ##  * by "aOrderBy" are adjacent.)^  ^(Furthermore, when two or more rows
+                                                                                ##  * contain the same values for all columns identified by "colUsed", all but
+                                                                                ##  * one such row may optionally be omitted from the result.)^
+                                                                                ##  * The virtual table is not required to omit rows that are duplicates
+                                                                                ##  * over the "colUsed" columns, but if the virtual table can do that without
+                                                                                ##  * too much extra effort, it could potentially help the query to run faster.
                                                                                 ##  * This mode is used for a DISTINCT query.
                                                                                 ##  * <li value="3"><p>
-                                                                                ##  * ^(If the sqlite3_vtab_distinct() interface returns 3, that means
-                                                                                ##  * that the query planner needs only distinct rows but it does need the
-                                                                                ##  * rows to be sorted.)^ ^The virtual table implementation is free to omit
-                                                                                ##  * rows that are identical in all aOrderBy columns, if it wants to, but
-                                                                                ##  * it is not required to omit any rows.  This mode is used for queries
+                                                                                ##  * ^(If the sqlite3_vtab_distinct() interface returns 3, that means the
+                                                                                ##  * virtual table must return rows in the order defined by "aOrderBy" as
+                                                                                ##  * if the sqlite3_vtab_distinct() interface had returned 0.  However if
+                                                                                ##  * two or more rows in the result have the same values for all columns
+                                                                                ##  * identified by "colUsed", then all but one such row may optionally be
+                                                                                ##  * omitted.)^  Like when the return value is 2, the virtual table
+                                                                                ##  * is not required to omit rows that are duplicates over the "colUsed"
+                                                                                ##  * columns, but if the virtual table can do that without
+                                                                                ##  * too much extra effort, it could potentially help the query to run faster.
+                                                                                ##  * This mode is used for queries
                                                                                 ##  * that have both DISTINCT and ORDER BY clauses.
                                                                                 ##  * </ol>
+                                                                                ##  *
+                                                                                ##  * <p>The following table summarizes the conditions under which the
+                                                                                ##  * virtual table is allowed to set the "orderByConsumed" flag based on
+                                                                                ##  * the value returned by sqlite3_vtab_distinct().  This table is a
+                                                                                ##  * restatement of the previous four paragraphs:
+                                                                                ##  *
+                                                                                ##  * <table border=1 cellspacing=0 cellpadding=10 width="90%">
+                                                                                ##  * <tr>
+                                                                                ##  * <td valign="top">sqlite3_vtab_distinct() return value
+                                                                                ##  * <td valign="top">Rows are returned in aOrderBy order
+                                                                                ##  * <td valign="top">Rows with the same value in all aOrderBy columns are adjacent
+                                                                                ##  * <td valign="top">Duplicates over all colUsed columns may be omitted
+                                                                                ##  * <tr><td>0<td>yes<td>yes<td>no
+                                                                                ##  * <tr><td>1<td>no<td>yes<td>no
+                                                                                ##  * <tr><td>2<td>no<td>yes<td>yes
+                                                                                ##  * <tr><td>3<td>yes<td>yes<td>yes
+                                                                                ##  * </table>
                                                                                 ##  *
                                                                                 ##  * ^For the purposes of comparing virtual table output values to see if the
                                                                                 ##  * values are same value for sorting purposes, two NULL values are considered
