@@ -4,12 +4,14 @@ cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
 git diff --exit-code -- . ':(exclude)update.sh' > /dev/null || { echo "Commit changes before updating!" ; exit 1 ; }
 
+(( ${HAS_NIMTEROP:-0} )) || nimble install -y nimterop@0.6.13
+
 # https://www.sqlite.org/download.html
 MAJOR="${1:-3}"
 MINOR="${2:-46}"
-PATCH="${3:-0}"
+PATCH="${3:-1}"
 YEAR="${4:-2024}"
-HASH="${5:-1221eed70de626871912bfca144c00411f0c30d3c2b7935cff3963b63370ef7c}"
+HASH="${5:-af6aae8d3eccc608857c63cf56efbadc70da48b5c719446b353ed88dded1e288}"
 
 VER_INT="$(printf "%d%02d%02d00" "$MAJOR" "$MINOR" "$PATCH")"
 
@@ -26,8 +28,6 @@ fi
 unzip -jo $ZIP "sqlite-amalgamation-$VER_INT/sqlite3.c" "sqlite-amalgamation-$VER_INT/sqlite3.h"
 
 cd ..
-
-(( ${HAS_NIMTEROP:-0} )) || nimble install -y nimterop@0.6.13
 
 nim c -o:wrap --skipParentCfg --verbosity:0 --hints:off ./sqlite3_abi/wrap.nim
 ./wrap
@@ -52,7 +52,7 @@ rm -f sqlite3_abi.nimble.bak  # Portable GNU/macOS `sed` needs backup
 ! git diff --exit-code > /dev/null || { echo "This repository is already up to date" ; exit 0 ; }
 
 git commit -a \
-  -m "bump \`sqlite-amalgamation\` to \`${MAJOR}.${MINOR}.${PATCH}\`" \
+  -m "bump sqlite-amalgamation to \`${MAJOR}.${MINOR}.${PATCH}\`" \
   -m "- https://www.sqlite.org/releaselog/${MAJOR}_${MINOR}_${PATCH}.html"
 
 echo "The repo has been updated with a commit recording the update."

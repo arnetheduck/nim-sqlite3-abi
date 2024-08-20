@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.46.0"
-  SQLITE_VERSION_NUMBER* = 3046000
-  SQLITE_SOURCE_ID* = "2024-05-23 13:25:27 96c92aba00c8375bc32fafcdf12429c58bd8aabfcadab6683e35bbb9cdebf19e"
+  SQLITE_VERSION* = "3.46.1"
+  SQLITE_VERSION_NUMBER* = 3046001
+  SQLITE_SOURCE_ID* = "2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16c63f69a1e33"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -581,7 +581,6 @@ type
     pMethods*: ptr sqlite3_io_methods ## ```
                                       ##   Methods for an open file
                                       ## ```
-  
   sqlite3_io_methods* {.bycopy.} = object
     iVersion*: cint
     xClose*: proc (a1: ptr sqlite3_file): cint {.sqlitedecl.}
@@ -621,7 +620,6 @@ type
                 ##   Methods above are valid for version 3 
                 ##      Additional methods may be added in future releases
                 ## ```
-  
   sqlite3_mutex* {.incompleteStruct.} = object
   sqlite3_api_routines* {.incompleteStruct.} = object
   sqlite3_filename* = cstring ## ```
@@ -702,7 +700,6 @@ type
                 ##    * New fields may be appended in future versions.  The iVersion
                 ##    * value will increment whenever this happens.
                 ## ```
-  
   sqlite3_syscall_ptr* = proc () {.sqlitedecl.}
   sqlite3_mem_methods* {.bycopy.} = object
     xMalloc*: proc (a1: cint): pointer {.sqlitedecl.} ## ```
@@ -729,7 +726,6 @@ type
     pAppData*: pointer       ## ```
                              ##   Argument to xInit() and xShutdown()
                              ## ```
-  
   sqlite3_stmt* {.incompleteStruct.} = object
   sqlite3_value* {.incompleteStruct.} = object
   sqlite3_context* {.incompleteStruct.} = object
@@ -762,7 +758,6 @@ type
                       ##   Error message from sqlite3_mprintf() 
                       ##      Virtual table implementations will typically add additional fields
                       ## ```
-  
   sqlite3_index_info* {.importc, bycopy, incompleteStruct, incompleteStruct.} = object
   sqlite3_vtab_cursor* {.bycopy.} = object ## ```
                                             ##   * CAPI3REF: Virtual Table Cursor Object
@@ -785,7 +780,6 @@ type
                              ##   Virtual table of this cursor 
                              ##      Virtual table implementations will typically add additional fields
                              ## ```
-  
   sqlite3_module* {.bycopy.} = object ## ```
                                        ##   * CAPI3REF: Virtual Table Object
                                        ##  * KEYWORDS: sqlite3_module {virtual table module}
@@ -856,7 +850,6 @@ type
                 ##   The methods above are in versions 1 through 3 of the sqlite_module object.
                 ##    * Those below are for version 4 and greater.
                 ## ```
-  
   sqlite3_blob* {.incompleteStruct.} = object
   sqlite3_mutex_methods* {.bycopy.} = object
     xMutexInit*: proc (): cint {.sqlitedecl.}
@@ -868,7 +861,6 @@ type
     xMutexLeave*: proc (a1: ptr sqlite3_mutex) {.sqlitedecl.}
     xMutexHeld*: proc (a1: ptr sqlite3_mutex): cint {.sqlitedecl.}
     xMutexNotheld*: proc (a1: ptr sqlite3_mutex): cint {.sqlitedecl.}
-
   sqlite3_str* {.incompleteStruct.} = object
   sqlite3_pcache* {.incompleteStruct.} = object
   sqlite3_pcache_page* {.bycopy.} = object
@@ -878,7 +870,6 @@ type
     pExtra*: pointer         ## ```
                              ##   Extra information associated with the page
                              ## ```
-  
   sqlite3_pcache_methods2* {.bycopy.} = object
     iVersion*: cint
     pArg*: pointer
@@ -897,7 +888,6 @@ type
     xTruncate*: proc (a1: ptr sqlite3_pcache; iLimit: cuint) {.sqlitedecl.}
     xDestroy*: proc (a1: ptr sqlite3_pcache) {.sqlitedecl.}
     xShrink*: proc (a1: ptr sqlite3_pcache) {.sqlitedecl.}
-
   sqlite3_pcache_methods* {.bycopy.} = object
     pArg*: pointer
     xInit*: proc (a1: pointer): cint {.sqlitedecl.}
@@ -912,7 +902,6 @@ type
                    newKey: cuint) {.sqlitedecl.}
     xTruncate*: proc (a1: ptr sqlite3_pcache; iLimit: cuint) {.sqlitedecl.}
     xDestroy*: proc (a1: ptr sqlite3_pcache) {.sqlitedecl.}
-
   sqlite3_backup* {.incompleteStruct.} = object
   sqlite3_snapshot* {.bycopy.} = object ## ```
                                          ##   * CAPI3REF: Database Snapshot
@@ -935,7 +924,6 @@ type
                                          ##  * the most recent version.
                                          ## ```
     hidden*: array[48, cuchar]
-
   sqlite3_rtree_geometry* {.bycopy.} = object ## ```
                                                ##   * A pointer to a structure of the following type is passed as the first
                                                ##  * argument to callbacks registered using rtree_geometry_callback().
@@ -955,7 +943,6 @@ type
     xDelUser*: proc (a1: pointer) {.sqlitedecl.} ## ```
                                             ##   Called by SQLite to clean up pUser
                                             ## ```
-  
   sqlite3_rtree_query_info* {.bycopy.} = object ## ```
                                                  ##   * A pointer to a structure of the following type is passed as the
                                                  ##  * argument to scored geometry callback registered using
@@ -1014,7 +1001,6 @@ type
     apSqlParam*: ptr ptr sqlite3_value ## ```
                                        ##   Original SQL values of parameters
                                        ## ```
-  
   sqlite3_rtree_dbl* = cdouble
   Fts5ExtensionApi* {.bycopy.} = object ## ```
                                          ##   * EXTENSION API FUNCTIONS
@@ -1314,12 +1300,10 @@ type
                                                                                  ## ```
     xInstToken*: proc (a1: ptr Fts5Context; iIdx: cint; iToken: cint;
                        a4: ptr cstring; a5: ptr cint): cint {.sqlitedecl.}
-
   Fts5Context* {.incompleteStruct.} = object
   Fts5PhraseIter* {.bycopy.} = object
     a*: ptr cuchar
     b*: ptr cuchar
-
   fts5_extension_function* = proc (pApi: ptr Fts5ExtensionApi;
                                    pFts: ptr Fts5Context;
                                    pCtx: ptr sqlite3_context; nVal: cint;
@@ -1333,7 +1317,6 @@ type
                       pText: cstring; nText: cint; xToken: proc (pCtx: pointer;
         tflags: cint; pToken: cstring; nToken: cint; iStart: cint; iEnd: cint): cint {.
         sqlitedecl.}): cint {.sqlitedecl.}
-
   fts5_api* {.bycopy.} = object
     iVersion*: cint          ## ```
                              ##   Currently always set to 2 
@@ -1358,7 +1341,6 @@ type
         sqlitedecl.}              ## ```
                              ##   Create a new auxiliary function
                              ## ```
-  
 var
   sqlite3_temp_directory* {.importc.}: cstring ## ```
                                                ##   * CAPI3REF: Name Of The Folder Holding Temporary Files
