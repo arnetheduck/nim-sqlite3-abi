@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.46.1"
-  SQLITE_VERSION_NUMBER* = 3046001
-  SQLITE_SOURCE_ID* = "2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16c63f69a1e33"
+  SQLITE_VERSION* = "3.47.0"
+  SQLITE_VERSION_NUMBER* = 3047000
+  SQLITE_SOURCE_ID* = "2024-10-21 16:30:22 03a9703e27c44437c39363d0baf82db4ebc94538a0f28411c85dda156f82636e"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -432,12 +432,14 @@ const
   SQLITE_SUBTYPE* = 0x00100000
   SQLITE_INNOCUOUS* = 0x00200000
   SQLITE_RESULT_SUBTYPE* = 0x01000000
+  SQLITE_SELFORDER1* = 0x02000000
   SQLITE_WIN32_DATA_DIRECTORY_TYPE* = 1
   SQLITE_WIN32_TEMP_DIRECTORY_TYPE* = 2
   SQLITE_TXN_NONE* = 0
   SQLITE_TXN_READ* = 1
   SQLITE_TXN_WRITE* = 2
-  SQLITE_INDEX_SCAN_UNIQUE* = 1
+  SQLITE_INDEX_SCAN_UNIQUE* = 0x00000001
+  SQLITE_INDEX_SCAN_HEX* = 0x00000002
   SQLITE_INDEX_CONSTRAINT_EQ* = 2
   SQLITE_INDEX_CONSTRAINT_GT* = 4
   SQLITE_INDEX_CONSTRAINT_LE* = 8
@@ -487,6 +489,7 @@ const
   SQLITE_TESTCTRL_JSON_SELFCHECK* = 14
   SQLITE_TESTCTRL_OPTIMIZATIONS* = 15
   SQLITE_TESTCTRL_ISKEYWORD* = 16
+  SQLITE_TESTCTRL_GETOPT* = 16
   SQLITE_TESTCTRL_SCRATCHMALLOC* = 17
   SQLITE_TESTCTRL_INTERNAL_FUNCTIONS* = 17
   SQLITE_TESTCTRL_LOCALTIME_FAULT* = 18
@@ -581,6 +584,7 @@ type
     pMethods*: ptr sqlite3_io_methods ## ```
                                       ##   Methods for an open file
                                       ## ```
+  
   sqlite3_io_methods* {.bycopy.} = object
     iVersion*: cint
     xClose*: proc (a1: ptr sqlite3_file): cint {.sqlitedecl.}
@@ -620,6 +624,7 @@ type
                 ##   Methods above are valid for version 3 
                 ##      Additional methods may be added in future releases
                 ## ```
+  
   sqlite3_mutex* {.incompleteStruct.} = object
   sqlite3_api_routines* {.incompleteStruct.} = object
   sqlite3_filename* = cstring ## ```
@@ -700,6 +705,7 @@ type
                 ##    * New fields may be appended in future versions.  The iVersion
                 ##    * value will increment whenever this happens.
                 ## ```
+  
   sqlite3_syscall_ptr* = proc () {.sqlitedecl.}
   sqlite3_mem_methods* {.bycopy.} = object
     xMalloc*: proc (a1: cint): pointer {.sqlitedecl.} ## ```
@@ -726,6 +732,7 @@ type
     pAppData*: pointer       ## ```
                              ##   Argument to xInit() and xShutdown()
                              ## ```
+  
   sqlite3_stmt* {.incompleteStruct.} = object
   sqlite3_value* {.incompleteStruct.} = object
   sqlite3_context* {.incompleteStruct.} = object
@@ -758,6 +765,7 @@ type
                       ##   Error message from sqlite3_mprintf() 
                       ##      Virtual table implementations will typically add additional fields
                       ## ```
+  
   sqlite3_index_info* {.importc, bycopy, incompleteStruct, incompleteStruct.} = object
   sqlite3_vtab_cursor* {.bycopy.} = object ## ```
                                             ##   * CAPI3REF: Virtual Table Cursor Object
@@ -780,6 +788,7 @@ type
                              ##   Virtual table of this cursor 
                              ##      Virtual table implementations will typically add additional fields
                              ## ```
+  
   sqlite3_module* {.bycopy.} = object ## ```
                                        ##   * CAPI3REF: Virtual Table Object
                                        ##  * KEYWORDS: sqlite3_module {virtual table module}
@@ -850,6 +859,7 @@ type
                 ##   The methods above are in versions 1 through 3 of the sqlite_module object.
                 ##    * Those below are for version 4 and greater.
                 ## ```
+  
   sqlite3_blob* {.incompleteStruct.} = object
   sqlite3_mutex_methods* {.bycopy.} = object
     xMutexInit*: proc (): cint {.sqlitedecl.}
@@ -861,6 +871,7 @@ type
     xMutexLeave*: proc (a1: ptr sqlite3_mutex) {.sqlitedecl.}
     xMutexHeld*: proc (a1: ptr sqlite3_mutex): cint {.sqlitedecl.}
     xMutexNotheld*: proc (a1: ptr sqlite3_mutex): cint {.sqlitedecl.}
+
   sqlite3_str* {.incompleteStruct.} = object
   sqlite3_pcache* {.incompleteStruct.} = object
   sqlite3_pcache_page* {.bycopy.} = object
@@ -870,6 +881,7 @@ type
     pExtra*: pointer         ## ```
                              ##   Extra information associated with the page
                              ## ```
+  
   sqlite3_pcache_methods2* {.bycopy.} = object
     iVersion*: cint
     pArg*: pointer
@@ -888,6 +900,7 @@ type
     xTruncate*: proc (a1: ptr sqlite3_pcache; iLimit: cuint) {.sqlitedecl.}
     xDestroy*: proc (a1: ptr sqlite3_pcache) {.sqlitedecl.}
     xShrink*: proc (a1: ptr sqlite3_pcache) {.sqlitedecl.}
+
   sqlite3_pcache_methods* {.bycopy.} = object
     pArg*: pointer
     xInit*: proc (a1: pointer): cint {.sqlitedecl.}
@@ -902,6 +915,7 @@ type
                    newKey: cuint) {.sqlitedecl.}
     xTruncate*: proc (a1: ptr sqlite3_pcache; iLimit: cuint) {.sqlitedecl.}
     xDestroy*: proc (a1: ptr sqlite3_pcache) {.sqlitedecl.}
+
   sqlite3_backup* {.incompleteStruct.} = object
   sqlite3_snapshot* {.bycopy.} = object ## ```
                                          ##   * CAPI3REF: Database Snapshot
@@ -924,6 +938,7 @@ type
                                          ##  * the most recent version.
                                          ## ```
     hidden*: array[48, cuchar]
+
   sqlite3_rtree_geometry* {.bycopy.} = object ## ```
                                                ##   * A pointer to a structure of the following type is passed as the first
                                                ##  * argument to callbacks registered using rtree_geometry_callback().
@@ -943,6 +958,7 @@ type
     xDelUser*: proc (a1: pointer) {.sqlitedecl.} ## ```
                                             ##   Called by SQLite to clean up pUser
                                             ## ```
+  
   sqlite3_rtree_query_info* {.bycopy.} = object ## ```
                                                  ##   * A pointer to a structure of the following type is passed as the
                                                  ##  * argument to scored geometry callback registered using
@@ -1001,6 +1017,7 @@ type
     apSqlParam*: ptr ptr sqlite3_value ## ```
                                        ##   Original SQL values of parameters
                                        ## ```
+  
   sqlite3_rtree_dbl* = cdouble
   Fts5ExtensionApi* {.bycopy.} = object ## ```
                                          ##   * EXTENSION API FUNCTIONS
@@ -1189,6 +1206,10 @@ type
                                          ##  *   (i.e. if it is a contentless table), then this API always iterates
                                          ##  *   through an empty set (all calls to xPhraseFirst() set iCol to -1).
                                          ##  *
+                                         ##  *   In all cases, matches are visited in (column ASC, offset ASC) order.
+                                         ##  *   i.e. all those in column 0, sorted by offset, followed by those in
+                                         ##  *   column 1, etc.
+                                         ##  *
                                          ##  * xPhraseNext()
                                          ##  *   See xPhraseFirst above.
                                          ##  *
@@ -1255,9 +1276,32 @@ type
                                          ##  *
                                          ##  *   This API can be quite slow if used with an FTS5 table created with the
                                          ##  *   "detail=none" or "detail=column" option.
+                                         ##  *
+                                         ##  * xColumnLocale(pFts5, iIdx, pzLocale, pnLocale)
+                                         ##  *   If parameter iCol is less than zero, or greater than or equal to the
+                                         ##  *   number of columns in the table, SQLITE_RANGE is returned.
+                                         ##  *
+                                         ##  *   Otherwise, this function attempts to retrieve the locale associated
+                                         ##  *   with column iCol of the current row. Usually, there is no associated
+                                         ##  *   locale, and output parameters (*pzLocale) and (*pnLocale) are set
+                                         ##  *   to NULL and 0, respectively. However, if the fts5_locale() function
+                                         ##  *   was used to associate a locale with the value when it was inserted
+                                         ##  *   into the fts5 table, then (*pzLocale) is set to point to a nul-terminated
+                                         ##  *   buffer containing the name of the locale in utf-8 encoding. (*pnLocale)
+                                         ##  *   is set to the size in bytes of the buffer, not including the
+                                         ##  *   nul-terminator.
+                                         ##  *
+                                         ##  *   If successful, SQLITE_OK is returned. Or, if an error occurs, an
+                                         ##  *   SQLite error code is returned. The final value of the output parameters
+                                         ##  *   is undefined in this case.
+                                         ##  *
+                                         ##  * xTokenize_v2:
+                                         ##  *   Tokenize text using the tokenizer belonging to the FTS5 table. This
+                                         ##  *   API is the same as the xTokenize() API, except that it allows a tokenizer
+                                         ##  *   locale to be specified.
                                          ## ```
     iVersion*: cint          ## ```
-                             ##   Currently always set to 3
+                             ##   Currently always set to 4
                              ## ```
     xUserData*: proc (a1: ptr Fts5Context): pointer {.sqlitedecl.}
     xColumnCount*: proc (a1: ptr Fts5Context): cint {.sqlitedecl.}
@@ -1300,15 +1344,38 @@ type
                                                                                  ## ```
     xInstToken*: proc (a1: ptr Fts5Context; iIdx: cint; iToken: cint;
                        a4: ptr cstring; a5: ptr cint): cint {.sqlitedecl.}
+    xColumnLocale*: proc (a1: ptr Fts5Context; iCol: cint; pz: ptr cstring;
+                          pn: ptr cint): cint {.sqlitedecl.} ## ```
+                                                        ##   Below this point are iVersion>=4 only
+                                                        ## ```
+    xTokenize_v2*: proc (a1: ptr Fts5Context; pText: cstring; nText: cint;
+                         pLocale: cstring; nLocale: cint; pCtx: pointer; xToken: proc (
+        a1: pointer; a2: cint; a3: cstring; a4: cint; a5: cint; a6: cint): cint {.
+        sqlitedecl.}): cint {.sqlitedecl.}
+
   Fts5Context* {.incompleteStruct.} = object
   Fts5PhraseIter* {.bycopy.} = object
     a*: ptr cuchar
     b*: ptr cuchar
+
   fts5_extension_function* = proc (pApi: ptr Fts5ExtensionApi;
                                    pFts: ptr Fts5Context;
                                    pCtx: ptr sqlite3_context; nVal: cint;
                                    apVal: ptr ptr sqlite3_value) {.sqlitedecl.}
   Fts5Tokenizer* {.incompleteStruct.} = object
+  fts5_tokenizer_v2* {.bycopy.} = object
+    iVersion*: cint          ## ```
+                             ##   Currently always 2
+                             ## ```
+    xCreate*: proc (a1: pointer; azArg: ptr cstring; nArg: cint;
+                    ppOut: ptr ptr Fts5Tokenizer): cint {.sqlitedecl.}
+    xDelete*: proc (a1: ptr Fts5Tokenizer) {.sqlitedecl.}
+    xTokenize*: proc (a1: ptr Fts5Tokenizer; pCtx: pointer; flags: cint;
+                      pText: cstring; nText: cint; pLocale: cstring;
+                      nLocale: cint; xToken: proc (pCtx: pointer; tflags: cint;
+        pToken: cstring; nToken: cint; iStart: cint; iEnd: cint): cint {.sqlitedecl.}): cint {.
+        sqlitedecl.}
+
   fts5_tokenizer* {.bycopy.} = object
     xCreate*: proc (a1: pointer; azArg: ptr cstring; nArg: cint;
                     ppOut: ptr ptr Fts5Tokenizer): cint {.sqlitedecl.}
@@ -1317,16 +1384,17 @@ type
                       pText: cstring; nText: cint; xToken: proc (pCtx: pointer;
         tflags: cint; pToken: cstring; nToken: cint; iStart: cint; iEnd: cint): cint {.
         sqlitedecl.}): cint {.sqlitedecl.}
+
   fts5_api* {.bycopy.} = object
     iVersion*: cint          ## ```
-                             ##   Currently always set to 2 
+                             ##   Currently always set to 3 
                              ##      Create a new tokenizer
                              ## ```
     xCreateTokenizer*: proc (pApi: ptr fts5_api; zName: cstring;
                              pUserData: pointer; pTokenizer: ptr fts5_tokenizer;
                              xDestroy: proc (a1: pointer) {.sqlitedecl.}): cint {.
         sqlitedecl.}              ## ```
-                             ##   Currently always set to 2 
+                             ##   Currently always set to 3 
                              ##      Create a new tokenizer
                              ## ```
     xFindTokenizer*: proc (pApi: ptr fts5_api; zName: cstring;
@@ -1341,6 +1409,21 @@ type
         sqlitedecl.}              ## ```
                              ##   Create a new auxiliary function
                              ## ```
+    xCreateTokenizer_v2*: proc (pApi: ptr fts5_api; zName: cstring;
+                                pUserData: pointer;
+                                pTokenizer: ptr fts5_tokenizer_v2;
+                                xDestroy: proc (a1: pointer) {.sqlitedecl.}): cint {.
+        sqlitedecl.} ## ```
+                ##   APIs below this point are only available if iVersion>=3 
+                ##      Create a new tokenizer
+                ## ```
+    xFindTokenizer_v2*: proc (pApi: ptr fts5_api; zName: cstring;
+                              ppUserData: ptr pointer;
+                              ppTokenizer: ptr ptr fts5_tokenizer_v2): cint {.
+        sqlitedecl.}              ## ```
+                             ##   Find an existing tokenizer
+                             ## ```
+  
 var
   sqlite3_temp_directory* {.importc.}: cstring ## ```
                                                ##   * CAPI3REF: Name Of The Folder Holding Temporary Files
@@ -2610,8 +2693,8 @@ proc sqlite3_open*(filename: cstring; ppDb: ptr ptr sqlite3): cint {.importc,
            ##  *
            ##  * [[OPEN_EXRESCODE]] ^(<dt>[SQLITE_OPEN_EXRESCODE]</dt>
            ##  * <dd>The database connection comes up in "extended result code mode".
-           ##  * In other words, the database behaves has if
-           ##  * [sqlite3_extended_result_codes(db,1)] where called on the database
+           ##  * In other words, the database behaves as if
+           ##  * [sqlite3_extended_result_codes(db,1)] were called on the database
            ##  * connection as soon as the connection is created. In addition to setting
            ##  * the extended result code mode, this flag also causes [sqlite3_open_v2()]
            ##  * to return an extended result code.</dd>
@@ -3115,13 +3198,17 @@ proc sqlite3_prepare*(db: ptr sqlite3; zSql: cstring; nByte: cint;
                     ##  * and sqlite3_prepare16_v3() use UTF-16.
                     ##  *
                     ##  * ^If the nByte argument is negative, then zSql is read up to the
-                    ##  * first zero terminator. ^If nByte is positive, then it is the
-                    ##  * number of bytes read from zSql.  ^If nByte is zero, then no prepared
+                    ##  * first zero terminator. ^If nByte is positive, then it is the maximum
+                    ##  * number of bytes read from zSql.  When nByte is positive, zSql is read
+                    ##  * up to the first zero terminator or until the nByte bytes have been read,
+                    ##  * whichever comes first.  ^If nByte is zero, then no prepared
                     ##  * statement is generated.
                     ##  * If the caller knows that the supplied string is nul-terminated, then
                     ##  * there is a small performance advantage to passing an nByte parameter that
                     ##  * is the number of bytes in the input string <i>including</i>
                     ##  * the nul-terminator.
+                    ##  * Note that nByte measure the length of the input in bytes, not
+                    ##  * characters, even for the UTF-16 interfaces.
                     ##  *
                     ##  * ^If pzTail is not NULL thenpzTail is made to point to the first byte
                     ##  * past the end of the first SQL statement in zSql.  These routines only
@@ -4469,7 +4556,7 @@ proc sqlite3_value_subtype*(a1: ptr sqlite3_value): cuint {.importc, sqlitedecl.
                                                                             ##  * one SQL function to another.  Use the [sqlite3_result_subtype()]
                                                                             ##  * routine to set the subtype for the return value of an SQL function.
                                                                             ##  *
-                                                                            ##  * Every [application-defined SQL function] that invoke this interface
+                                                                            ##  * Every [application-defined SQL function] that invokes this interface
                                                                             ##  * should include the [SQLITE_SUBTYPE] property in the text
                                                                             ##  * encoding argument when the function is [sqlite3_create_function|registered].
                                                                             ##  * If the [SQLITE_SUBTYPE] property is omitted, then sqlite3_value_subtype()
@@ -6699,6 +6786,16 @@ proc sqlite3_backup_init*(pDest: ptr sqlite3; zDestName: cstring;
                     ##  * APIs are not strictly speaking threadsafe. If they are invoked at the
                     ##  * same time as another thread is invoking sqlite3_backup_step() it is
                     ##  * possible that they return invalid values.
+                    ##  *
+                    ##  * <b>Alternatives To Using The Backup API</b>
+                    ##  *
+                    ##  * Other techniques for safely creating a consistent backup of an SQLite
+                    ##  * database include:
+                    ##  *
+                    ##  * <ul>
+                    ##  * <li> The [VACUUM INTO] command.
+                    ##  * <li> The [sqlite3_rsync] utility program.
+                    ##  * </ul>
                     ## ```
 proc sqlite3_backup_step*(p: ptr sqlite3_backup; nPage: cint): cint {.importc,
     sqlitedecl.}
@@ -7637,6 +7734,14 @@ proc sqlite3_snapshot_get*(db: ptr sqlite3; zSchema: cstring;
                     ##  * created [sqlite3_snapshot] object intoP and returns SQLITE_OK.
                     ##  * If there is not already a read-transaction open on schema S when
                     ##  * this function is called, one is opened automatically.
+                    ##  *
+                    ##  * If a read-transaction is opened by this function, then it is guaranteed
+                    ##  * that the returned snapshot object may not be invalidated by a database
+                    ##  * writer or checkpointer until after the read-transaction is closed. This
+                    ##  * is not guaranteed if a read-transaction is already open when this
+                    ##  * function is called. In that case, any subsequent write or checkpoint
+                    ##  * operation on the database may invalidate the returned snapshot handle,
+                    ##  * even while the read-transaction remains open.
                     ##  *
                     ##  * The following must be true for this function to succeed. If any of
                     ##  * the following statements are false when sqlite3_snapshot_get() is

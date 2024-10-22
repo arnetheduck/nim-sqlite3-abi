@@ -8,10 +8,10 @@ git diff --exit-code -- . ':(exclude)update.sh' > /dev/null || { echo "Commit ch
 
 # https://www.sqlite.org/download.html
 MAJOR="${1:-3}"
-MINOR="${2:-46}"
-PATCH="${3:-1}"
+MINOR="${2:-47}"
+PATCH="${3:-0}"
 YEAR="${4:-2024}"
-HASH="${5:-af6aae8d3eccc608857c63cf56efbadc70da48b5c719446b353ed88dded1e288}"
+HASH="${5:-e35ee48efc24fe58d0e9102034ac0a41e3904641a745e94ab11a841fe9d7355e}"
 
 VER_INT="$(printf "%d%02d%02d00" "$MAJOR" "$MINOR" "$PATCH")"
 
