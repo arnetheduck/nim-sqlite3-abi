@@ -9,16 +9,16 @@ git diff --exit-code -- . ':(exclude)update.sh' > /dev/null || { echo "Commit ch
 # https://www.sqlite.org/download.html
 MAJOR="${1:-3}"
 MINOR="${2:-47}"
-PATCH="${3:-0}"
+PATCH="${3:-1}"
 YEAR="${4:-2024}"
-HASH="${5:-e35ee48efc24fe58d0e9102034ac0a41e3904641a745e94ab11a841fe9d7355e}"
+HASH="${5:-71c08f4c890000094a6781169927de8f87ad8569410d9a4310c07dbca1f14b37}"
 
 VER_INT="$(printf "%d%02d%02d00" "$MAJOR" "$MINOR" "$PATCH")"
 
 cd sqlite3_abi
 
 ZIP="sqlite-amalgamation-$VER_INT.zip"
-[ -f "$ZIP" ] || wget https://www.sqlite.org/$YEAR/$ZIP
+[ -f "$ZIP" ] || curl -OL https://www.sqlite.org/$YEAR/$ZIP
 HASH_ACTUAL=$(python3 -c "import hashlib; print(hashlib.sha3_256(open('$ZIP', 'rb').read()).hexdigest())")
 if [[ "${HASH_ACTUAL}" != "${HASH}" ]]; then
   echo "Incorrect ${ZIP} hash: ${HASH}"
@@ -52,7 +52,7 @@ rm -f sqlite3_abi.nimble.bak  # Portable GNU/macOS `sed` needs backup
 ! git diff --exit-code > /dev/null || { echo "This repository is already up to date" ; exit 0 ; }
 
 git commit -a \
-  -m "bump sqlite-amalgamation to \`${MAJOR}.${MINOR}.${PATCH}\`" \
+  -m "Bump sqlite-amalgamation to \`${MAJOR}.${MINOR}.${PATCH}\`" \
   -m "- https://www.sqlite.org/releaselog/${MAJOR}_${MINOR}_${PATCH}.html"
 
 echo "The repo has been updated with a commit recording the update."
