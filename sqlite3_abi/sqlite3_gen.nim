@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.47.2"
-  SQLITE_VERSION_NUMBER* = 3047002
-  SQLITE_SOURCE_ID* = "2024-12-07 20:39:59 2aabe05e2e8cae4847a802ee2daddc1d7413d8fc560254d93ee3e72c14685b6c"
+  SQLITE_VERSION* = "3.48.0"
+  SQLITE_VERSION_NUMBER* = 3048000
+  SQLITE_SOURCE_ID* = "2025-01-14 11:05:00 d2fe6b05f38d9d7cd78c5d252e99ac59f1aea071d669830c1ffe4e8966e84010"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -303,6 +303,7 @@ const
   SQLITE_FCNTL_EXTERNAL_READER* = 40
   SQLITE_FCNTL_CKSM_FILE* = 41
   SQLITE_FCNTL_RESET_CACHE* = 42
+  SQLITE_FCNTL_NULL_IO* = 43
   SQLITE_ACCESS_EXISTS* = 0
   SQLITE_ACCESS_READWRITE* = 1
   SQLITE_ACCESS_READ* = 2
@@ -416,6 +417,7 @@ const
   SQLITE_PREPARE_PERSISTENT* = 0x00000001
   SQLITE_PREPARE_NORMALIZE* = 0x00000002
   SQLITE_PREPARE_NO_VTAB* = 0x00000004
+  SQLITE_PREPARE_DONT_LOG* = 0x00000010
   SQLITE_INTEGER* = 1
   SQLITE_FLOAT* = 2
   SQLITE_BLOB* = 4
@@ -1267,13 +1269,28 @@ type
                                          ##  *   value returned by xInstCount(), SQLITE_RANGE is returned.  Otherwise,
                                          ##  *   output variable (*ppToken) is set to point to a buffer containing the
                                          ##  *   matching document token, and (*pnToken) to the size of that buffer in
-                                         ##  *   bytes. This API is not available if the specified token matches a
-                                         ##  *   prefix query term. In that case both output variables are always set
-                                         ##  *   to 0.
+                                         ##  *   bytes.
                                          ##  *
                                          ##  *   The output text is not a copy of the document text that was tokenized.
                                          ##  *   It is the output of the tokenizer module. For tokendata=1 tables, this
                                          ##  *   includes any embedded 0x00 and trailing data.
+                                         ##  *
+                                         ##  *   This API may be slow in some cases if the token identified by parameters
+                                         ##  *   iIdx and iToken matched a prefix token in the query. In most cases, the
+                                         ##  *   first call to this API for each prefix token in the query is forced
+                                         ##  *   to scan the portion of the full-text index that matches the prefix
+                                         ##  *   token to collect the extra data required by this API. If the prefix
+                                         ##  *   token matches a large number of token instances in the document set,
+                                         ##  *   this may be a performance problem.
+                                         ##  *
+                                         ##  *   If the user knows in advance that a query may use this API for a
+                                         ##  *   prefix token, FTS5 may be configured to collect all required data as part
+                                         ##  *   of the initial querying of the full-text index, avoiding the second scan
+                                         ##  *   entirely. This also causes prefix queries that do not use this API to
+                                         ##  *   run more slowly and use more memory. FTS5 may be configured in this way
+                                         ##  *   either on a per-table basis using the [FTS5 insttoken | 'insttoken']
+                                         ##  *   option, or on a per-query basis using the
+                                         ##  *   [fts5_insttoken | fts5_insttoken()] user function.
                                          ##  *
                                          ##  *   This API can be quite slow if used with an FTS5 table created with the
                                          ##  *   "detail=none" or "detail=column" option.
@@ -1892,10 +1909,14 @@ proc sqlite3_changes*(a1: ptr sqlite3): cint {.importc, sqlitedecl.}
                                                                ##  * deleted by the most recently completed INSERT, UPDATE or DELETE
                                                                ##  * statement on the database connection specified by the only parameter.
                                                                ##  * The two functions are identical except for the type of the return value
-                                                               ##  * and that if the number of rows modified by the most recent INSERT, UPDATE
+                                                               ##  * and that if the number of rows modified by the most recent INSERT, UPDATE,
                                                                ##  * or DELETE is greater than the maximum value supported by type "int", then
                                                                ##  * the return value of sqlite3_changes() is undefined. ^Executing any other
                                                                ##  * type of SQL statement does not modify the value returned by these functions.
+                                                               ##  * For the purposes of this interface, a CREATE TABLE AS SELECT statement
+                                                               ##  * does not count as an INSERT, UPDATE or DELETE statement and hence the rows
+                                                               ##  * added to the new table by the CREATE TABLE AS SELECT statement are not
+                                                               ##  * counted.
                                                                ##  *
                                                                ##  * ^Only changes made directly by the INSERT, UPDATE or DELETE statement are
                                                                ##  * considered - auxiliary changes caused by [CREATE TRIGGER | triggers],
