@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.48.0"
-  SQLITE_VERSION_NUMBER* = 3048000
-  SQLITE_SOURCE_ID* = "2025-01-14 11:05:00 d2fe6b05f38d9d7cd78c5d252e99ac59f1aea071d669830c1ffe4e8966e84010"
+  SQLITE_VERSION* = "3.49.0"
+  SQLITE_VERSION_NUMBER* = 3049000
+  SQLITE_SOURCE_ID* = "2025-02-06 11:55:18 4a7dd425dc2a0e5082a9049c9b4a9d4f199a71583d014c24b4cfe276c5a77cde"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -361,7 +361,10 @@ const
   SQLITE_DBCONFIG_TRUSTED_SCHEMA* = 1017
   SQLITE_DBCONFIG_STMT_SCANSTATUS* = 1018
   SQLITE_DBCONFIG_REVERSE_SCANORDER* = 1019
-  SQLITE_DBCONFIG_MAX* = 1019
+  SQLITE_DBCONFIG_ENABLE_ATTACH_CREATE* = 1020
+  SQLITE_DBCONFIG_ENABLE_ATTACH_WRITE* = 1021
+  SQLITE_DBCONFIG_ENABLE_COMMENTS* = 1022
+  SQLITE_DBCONFIG_MAX* = 1022
   SQLITE_DENY* = 1
   SQLITE_IGNORE* = 2
   SQLITE_CREATE_INDEX* = 1
@@ -7911,8 +7914,9 @@ proc sqlite3_serialize*(db: ptr sqlite3; zSchema: cstring; piSize: ptr int64;
   ## ```
                                                                      ##   * CAPI3REF: Serialize a database
                                                                      ##  *
-                                                                     ##  * The sqlite3_serialize(D,S,P,F) interface returns a pointer to memory
-                                                                     ##  * that is a serialization of the S database on [database connection] D.
+                                                                     ##  * The sqlite3_serialize(D,S,P,F) interface returns a pointer to
+                                                                     ##  * memory that is a serialization of the S database on
+                                                                     ##  * [database connection] D.  If S is a NULL pointer, the main database is used.
                                                                      ##  * If P is not a NULL pointer, then the size of the database in bytes
                                                                      ##  * is written intoP.
                                                                      ##  *
