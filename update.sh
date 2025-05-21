@@ -9,9 +9,9 @@ git diff --exit-code -- . ':(exclude)update.sh' > /dev/null || { echo "Commit ch
 # https://www.sqlite.org/download.html
 MAJOR="${1:-3}"
 MINOR="${2:-49}"
-PATCH="${3:-1}"
+PATCH="${3:-2}"
 YEAR="${4:-2025}"
-HASH="${5:-e7eb4cfb2d95626e782cfa748f534c74482f2c3c93f13ee828b9187ce05b2da7}"
+HASH="${5:-fad307cde789046256b4960734d7fec6b31db7f5dc8525474484885faf82866c}"
 
 VER_INT="$(printf "%d%02d%02d00" "$MAJOR" "$MINOR" "$PATCH")"
 
@@ -52,8 +52,9 @@ rm -f sqlite3_abi.nimble.bak  # Portable GNU/macOS `sed` needs backup
 ! git diff --exit-code > /dev/null || { echo "This repository is already up to date" ; exit 0 ; }
 
 git commit -a \
-  -m "Bump sqlite-amalgamation to \`${MAJOR}.${MINOR}.${PATCH}\`" \
+  -m "Bump sqlite-amalgamation to ${MAJOR}.${MINOR}.${PATCH}" \
   -m "- https://www.sqlite.org/releaselog/${MAJOR}_${MINOR}_${PATCH}.html"
 
 echo "The repo has been updated with a commit recording the update."
 echo "You can review the changes with 'git diff HEAD^' before pushing to a public repository."
+echo "After pushing, use 'https://github.com/arnetheduck/nim-sqlite3-abi/releases' to tag the release."
