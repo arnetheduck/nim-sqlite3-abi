@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.49.2"
-  SQLITE_VERSION_NUMBER* = 3049002
-  SQLITE_SOURCE_ID* = "2025-05-07 10:39:52 17144570b0d96ae63cd6f3edca39e27ebd74925252bbaf6723bcb2f6b4861fb1"
+  SQLITE_VERSION* = "3.50.0"
+  SQLITE_VERSION_NUMBER* = 3050000
+  SQLITE_SOURCE_ID* = "2025-05-29 14:26:00 dfc790f998f450d9c35e3ba1c8c89c17466cb559f87b0239e4aab9d34e28f742"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -304,6 +304,7 @@ const
   SQLITE_FCNTL_CKSM_FILE* = 41
   SQLITE_FCNTL_RESET_CACHE* = 42
   SQLITE_FCNTL_NULL_IO* = 43
+  SQLITE_FCNTL_BLOCK_ON_CONNECT* = 44
   SQLITE_ACCESS_EXISTS* = 0
   SQLITE_ACCESS_READWRITE* = 1
   SQLITE_ACCESS_READ* = 2
@@ -365,6 +366,7 @@ const
   SQLITE_DBCONFIG_ENABLE_ATTACH_WRITE* = 1021
   SQLITE_DBCONFIG_ENABLE_COMMENTS* = 1022
   SQLITE_DBCONFIG_MAX* = 1022
+  SQLITE_SETLK_BLOCK_ON_CONNECT* = 0x00000001
   SQLITE_DENY* = 1
   SQLITE_IGNORE* = 2
   SQLITE_CREATE_INDEX* = 1
@@ -2169,6 +2171,39 @@ proc sqlite3_busy_timeout*(a1: ptr sqlite3; ms: cint): cint {.importc, sqlitedec
                                                                               ##  *
                                                                               ##  * See also:  [PRAGMA busy_timeout]
                                                                               ## ```
+proc sqlite3_setlk_timeout*(a1: ptr sqlite3; ms: cint; flags: cint): cint {.
+    importc, sqlitedecl.}
+  ## ```
+                    ##   * CAPI3REF: Set the Setlk Timeout
+                    ##  * METHOD: sqlite3
+                    ##  *
+                    ##  * This routine is only useful in SQLITE_ENABLE_SETLK_TIMEOUT builds. If
+                    ##  * the VFS supports blocking locks, it sets the timeout in ms used by
+                    ##  * eligible locks taken on wal mode databases by the specified database
+                    ##  * handle. In non-SQLITE_ENABLE_SETLK_TIMEOUT builds, or if the VFS does
+                    ##  * not support blocking locks, this function is a no-op.
+                    ##  *
+                    ##  * Passing 0 to this function disables blocking locks altogether. Passing
+                    ##  * -1 to this function requests that the VFS blocks for a long time -
+                    ##  * indefinitely if possible. The results of passing any other negative value
+                    ##  * are undefined.
+                    ##  *
+                    ##  * Internally, each SQLite database handle store two timeout values - the
+                    ##  * busy-timeout (used for rollback mode databases, or if the VFS does not
+                    ##  * support blocking locks) and the setlk-timeout (used for blocking locks
+                    ##  * on wal-mode databases). The sqlite3_busy_timeout() method sets both
+                    ##  * values, this function sets only the setlk-timeout value. Therefore,
+                    ##  * to configure separate busy-timeout and setlk-timeout values for a single
+                    ##  * database handle, call sqlite3_busy_timeout() followed by this function.
+                    ##  *
+                    ##  * Whenever the number of connections to a wal mode database falls from
+                    ##  * 1 to 0, the last connection takes an exclusive lock on the database,
+                    ##  * then checkpoints and deletes the wal file. While it is doing this, any
+                    ##  * new connection that tries to read from the database fails with an
+                    ##  * SQLITE_BUSY error. Or, if the SQLITE_SETLK_BLOCK_ON_CONNECT flag is
+                    ##  * passed to this API, the new connection blocks until the exclusive lock
+                    ##  * has been released.
+                    ## ```
 proc sqlite3_get_table*(db: ptr sqlite3; zSql: cstring;
                         pazResult: ptr ptr cstring; pnRow: ptr cint;
                         pnColumn: ptr cint; pzErrmsg: ptr cstring): cint {.
@@ -3908,7 +3943,7 @@ proc sqlite3_step*(a1: ptr sqlite3_stmt): cint {.importc, sqlitedecl.}
                                                                  ##  * other than [SQLITE_ROW] before any subsequent invocation of
                                                                  ##  * sqlite3_step().  Failure to reset the prepared statement using
                                                                  ##  * [sqlite3_reset()] would result in an [SQLITE_MISUSE] return from
-                                                                 ##  * sqlite3_step().  But after [version 3.6.23.1] ([dateof:3.6.23.1],
+                                                                 ##  * sqlite3_step().  But after [version 3.6.23.1] ([dateof:3.6.23.1]),
                                                                  ##  * sqlite3_step() began
                                                                  ##  * calling [sqlite3_reset()] automatically in this circumstance rather
                                                                  ##  * than returning [SQLITE_MISUSE].  This is not considered a compatibility
@@ -5454,6 +5489,8 @@ proc sqlite3_update_hook*(a1: ptr sqlite3; a2: proc (a1: pointer; a2: cint;
                     ##  *
                     ##  * ^The second argument is a pointer to the function to invoke when a
                     ##  * row is updated, inserted or deleted in a rowid table.
+                    ##  * ^The update hook is disabled by invoking sqlite3_update_hook()
+                    ##  * with a NULL pointer as the second parameter.
                     ##  * ^The first argument to the callback is a copy of the third argument
                     ##  * to sqlite3_update_hook().
                     ##  * ^The second callback argument is one of [SQLITE_INSERT], [SQLITE_DELETE],
