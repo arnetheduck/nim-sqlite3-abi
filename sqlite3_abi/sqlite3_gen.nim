@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.50.2"
-  SQLITE_VERSION_NUMBER* = 3050002
-  SQLITE_SOURCE_ID* = "2025-06-28 14:00:48 2af157d77fb1304a74176eaee7fbc7c7e932d946bf25325e9c26c91db19e3079"
+  SQLITE_VERSION* = "3.50.3"
+  SQLITE_VERSION_NUMBER* = 3050003
+  SQLITE_SOURCE_ID* = "2025-07-17 13:25:10 3ce993b8657d6d9deda380a93cdd6404a8c8ba1b185b2bc423703e41ae5f2543"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -6892,7 +6892,7 @@ proc sqlite3_unlock_notify*(pBlocked: ptr sqlite3; xNotify: proc (
                     ##  * application receives an SQLITE_LOCKED error, it may call the
                     ##  * sqlite3_unlock_notify() method with the blocked connection handle as
                     ##  * the first argument to register for a callback that will be invoked
-                    ##  * when the blocking connections current transaction is concluded. ^The
+                    ##  * when the blocking connection's current transaction is concluded. ^The
                     ##  * callback is invoked from within the [sqlite3_step] or [sqlite3_close]
                     ##  * call that concludes the blocking connection's transaction.
                     ##  *
@@ -6912,7 +6912,7 @@ proc sqlite3_unlock_notify*(pBlocked: ptr sqlite3; xNotify: proc (
                     ##  * blocked connection already has a registered unlock-notify callback,
                     ##  * then the new callback replaces the old.)^ ^If sqlite3_unlock_notify() is
                     ##  * called with a NULL pointer as its second argument, then any existing
-                    ##  * unlock-notify callback is canceled. ^The blocked connections
+                    ##  * unlock-notify callback is canceled. ^The blocked connection's
                     ##  * unlock-notify callback may also be canceled by closing the blocked
                     ##  * connection using [sqlite3_close()].
                     ##  *
@@ -7404,7 +7404,7 @@ proc sqlite3_vtab_distinct*(a1: ptr sqlite3_index_info): cint {.importc, sqlited
                                                                                 ##  * </table>
                                                                                 ##  *
                                                                                 ##  * ^For the purposes of comparing virtual table output values to see if the
-                                                                                ##  * values are same value for sorting purposes, two NULL values are considered
+                                                                                ##  * values are the same value for sorting purposes, two NULL values are considered
                                                                                 ##  * to be the same.  In other words, the comparison operator is "IS"
                                                                                 ##  * (or "IS NOT DISTINCT FROM") and not "==".
                                                                                 ##  *
@@ -7414,7 +7414,7 @@ proc sqlite3_vtab_distinct*(a1: ptr sqlite3_index_info): cint {.importc, sqlited
                                                                                 ##  *
                                                                                 ##  * ^A virtual table implementation is always free to return rows in any order
                                                                                 ##  * it wants, as long as the "orderByConsumed" flag is not set.  ^When the
-                                                                                ##  * the "orderByConsumed" flag is unset, the query planner will add extra
+                                                                                ##  * "orderByConsumed" flag is unset, the query planner will add extra
                                                                                 ##  * [bytecode] to ensure that the final results returned by the SQL query are
                                                                                 ##  * ordered correctly.  The use of the "orderByConsumed" flag and the
                                                                                 ##  * sqlite3_vtab_distinct() interface is merely an optimization.  ^Careful
@@ -7511,7 +7511,7 @@ proc sqlite3_vtab_in_first*(pVal: ptr sqlite3_value;
                                                                                   ##  * sqlite3_vtab_in_next(X,P) should be one of the parameters to the
                                                                                   ##  * xFilter method which invokes these routines, and specifically
                                                                                   ##  * a parameter that was previously selected for all-at-once IN constraint
-                                                                                  ##  * processing use the [sqlite3_vtab_in()] interface in the
+                                                                                  ##  * processing using the [sqlite3_vtab_in()] interface in the
                                                                                   ##  * [xBestIndex|xBestIndex method].  ^(If the X parameter is not
                                                                                   ##  * an xFilter argument that was selected for all-at-once IN constraint
                                                                                   ##  * processing, then these routines return [SQLITE_ERROR].)^
@@ -7568,7 +7568,7 @@ proc sqlite3_vtab_rhs_value*(a1: ptr sqlite3_index_info; a2: cint;
            ##  * and only ifV is set to a value.  ^The sqlite3_vtab_rhs_value(P,J,V)
            ##  * inteface returns SQLITE_NOTFOUND if the right-hand side of the J-th
            ##  * constraint is not available.  ^The sqlite3_vtab_rhs_value() interface
-           ##  * can return an result code other than SQLITE_OK or SQLITE_NOTFOUND if
+           ##  * can return a result code other than SQLITE_OK or SQLITE_NOTFOUND if
            ##  * something goes wrong.
            ##  *
            ##  * The sqlite3_vtab_rhs_value() interface is usually only successful if
@@ -7621,8 +7621,8 @@ proc sqlite3_stmt_scanstatus*(pStmt: ptr sqlite3_stmt; idx: cint;
                     ##  * sqlite3_stmt_scanstatus_v2() with a zeroed flags parameter.
                     ##  *
                     ##  * Parameter "idx" identifies the specific query element to retrieve statistics
-                    ##  * for. Query elements are numbered starting from zero. A value of -1 may be
-                    ##  * to query for statistics regarding the entire query. ^If idx is out of range
+                    ##  * for. Query elements are numbered starting from zero. A value of -1 may
+                    ##  * retrieve statistics for the entire query. ^If idx is out of range
                     ##  * - less than -1 or greater than or equal to the total number of query
                     ##  * elements used to implement the statement - a non-zero value is returned and
                     ##  * the variable that pOut points to is unchanged.
@@ -7761,8 +7761,8 @@ proc sqlite3_system_errno*(a1: ptr sqlite3): cint {.importc, sqlitedecl.}
                                                                     ##  * triggers; and so forth.
                                                                     ##  *
                                                                     ##  * When the [sqlite3_blob_write()] API is used to update a blob column,
-                                                                    ##  * the pre-update hook is invoked with SQLITE_DELETE. This is because the
-                                                                    ##  * in this case the new values are not available. In this case, when a
+                                                                    ##  * the pre-update hook is invoked with SQLITE_DELETE, because
+                                                                    ##  * the new values are not yet available. In this case, when a
                                                                     ##  * callback made with op==SQLITE_DELETE is actually a write using the
                                                                     ##  * sqlite3_blob_write() API, the [sqlite3_preupdate_blobwrite()] returns
                                                                     ##  * the index of the column being written. In other cases, where the
@@ -7960,7 +7960,7 @@ proc sqlite3_serialize*(db: ptr sqlite3; zSchema: cstring; piSize: ptr int64;
                                                                      ##  * For an ordinary on-disk database file, the serialization is just a
                                                                      ##  * copy of the disk file.  For an in-memory database or a "TEMP" database,
                                                                      ##  * the serialization is the same sequence of bytes which would be written
-                                                                     ##  * to disk if that database where backed up to disk.
+                                                                     ##  * to disk if that database were backed up to disk.
                                                                      ##  *
                                                                      ##  * The usual case is that sqlite3_serialize() copies the serialization of
                                                                      ##  * the database into memory obtained from [sqlite3_malloc64()] and returns
@@ -7969,7 +7969,7 @@ proc sqlite3_serialize*(db: ptr sqlite3; zSchema: cstring; piSize: ptr int64;
                                                                      ##  * contains the SQLITE_SERIALIZE_NOCOPY bit, then no memory allocations
                                                                      ##  * are made, and the sqlite3_serialize() function will return a pointer
                                                                      ##  * to the contiguous memory representation of the database that SQLite
-                                                                     ##  * is currently using for that database, or NULL if the no such contiguous
+                                                                     ##  * is currently using for that database, or NULL if no such contiguous
                                                                      ##  * memory representation of the database exists.  A contiguous memory
                                                                      ##  * representation of the database will usually only exist if there has
                                                                      ##  * been a prior call to [sqlite3_deserialize(D,S,...)] with the same
@@ -8020,7 +8020,7 @@ proc sqlite3_deserialize*(db: ptr sqlite3; zSchema: cstring; pData: ptr cuchar;
                     ##  * database is currently in a read transaction or is involved in a backup
                     ##  * operation.
                     ##  *
-                    ##  * It is not possible to deserialized into the TEMP database.  If the
+                    ##  * It is not possible to deserialize into the TEMP database.  If the
                     ##  * S argument to sqlite3_deserialize(D,S,P,N,M,F) is "temp" then the
                     ##  * function returns SQLITE_ERROR.
                     ##  *
