@@ -27,9 +27,9 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.50.1"
-  SQLITE_VERSION_NUMBER* = 3050001
-  SQLITE_SOURCE_ID* = "2025-06-06 14:52:32 b77dc5e0f596d2140d9ac682b2893ff65d3a4140aa86067a3efebe29dc914c95"
+  SQLITE_VERSION* = "3.50.2"
+  SQLITE_VERSION_NUMBER* = 3050002
+  SQLITE_SOURCE_ID* = "2025-06-28 14:00:48 2af157d77fb1304a74176eaee7fbc7c7e932d946bf25325e9c26c91db19e3079"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -3075,7 +3075,7 @@ proc sqlite3_create_filename*(zDatabase: cstring; zJournal: cstring;
                     ##  *
                     ##  * The sqlite3_create_filename(D,J,W,N,P) allocates memory to hold a version of
                     ##  * database filename D with corresponding journal file J and WAL file W and
-                    ##  * with N URI parameters key/values pairs in the array P.  The result from
+                    ##  * an array P of N URI Key/Value pairs.  The result from
                     ##  * sqlite3_create_filename(D,J,W,N,P) is a pointer to a database filename that
                     ##  * is safe to pass to routines like:
                     ##  * <ul>
@@ -3512,7 +3512,7 @@ proc sqlite3_bind_blob*(a1: ptr sqlite3_stmt; a2: cint; a3: pointer; n: cint;
                                                                                   ##  * METHOD: sqlite3_stmt
                                                                                   ##  *
                                                                                   ##  * ^(In the SQL statement text input to [sqlite3_prepare_v2()] and its variants,
-                                                                                  ##  * literals may be replaced by a [parameter] that matches one of following
+                                                                                  ##  * literals may be replaced by a [parameter] that matches one of the following
                                                                                   ##  * templates:
                                                                                   ##  *
                                                                                   ##  * <ul>
@@ -3557,7 +3557,7 @@ proc sqlite3_bind_blob*(a1: ptr sqlite3_stmt; a2: cint; a3: pointer; n: cint;
                                                                                   ##  *
                                                                                   ##  * [[byte-order determination rules]] ^The byte-order of
                                                                                   ##  * UTF16 input text is determined by the byte-order mark (BOM, U+FEFF)
-                                                                                  ##  * found in first character, which is removed, or in the absence of a BOM
+                                                                                  ##  * found in the first character, which is removed, or in the absence of a BOM
                                                                                   ##  * the byte order is the native byte order of the host
                                                                                   ##  * machine for sqlite3_bind_text16() or the byte order specified in
                                                                                   ##  * the 6th parameter for sqlite3_bind_text64().)^
@@ -3577,7 +3577,7 @@ proc sqlite3_bind_blob*(a1: ptr sqlite3_stmt; a2: cint; a3: pointer; n: cint;
                                                                                   ##  * or sqlite3_bind_text16() or sqlite3_bind_text64() then
                                                                                   ##  * that parameter must be the byte offset
                                                                                   ##  * where the NUL terminator would occur assuming the string were NUL
-                                                                                  ##  * terminated.  If any NUL characters occurs at byte offsets less than
+                                                                                  ##  * terminated.  If any NUL characters occur at byte offsets less than
                                                                                   ##  * the value of the fourth parameter then the resulting string value will
                                                                                   ##  * contain embedded NULs.  The result of expressions involving strings
                                                                                   ##  * with embedded NULs is undefined.
@@ -3800,7 +3800,7 @@ proc sqlite3_column_database_name*(a1: ptr sqlite3_stmt; a2: cint): cstring {.
                     ##  * METHOD: sqlite3_stmt
                     ##  *
                     ##  * ^These routines provide a means to determine the database, table, and
-                    ##  * table column that is the origin of a particular result column in
+                    ##  * table column that is the origin of a particular result column in a
                     ##  * [SELECT] statement.
                     ##  * ^The name of the database or table or column can be returned as
                     ##  * either a UTF-8 or UTF-16 string.  ^The _database_ routines return
@@ -4351,8 +4351,8 @@ proc sqlite3_create_function*(db: ptr sqlite3; zFunctionName: cstring;
            ##  *
            ##  * For best security, the [SQLITE_DIRECTONLY] flag is recommended for
            ##  * all application-defined SQL functions that do not need to be
-           ##  * used inside of triggers, view, CHECK constraints, or other elements of
-           ##  * the database schema.  This flags is especially recommended for SQL
+           ##  * used inside of triggers, views, CHECK constraints, or other elements of
+           ##  * the database schema.  This flag is especially recommended for SQL
            ##  * functions that have side effects or reveal internal application state.
            ##  * Without this flag, an attacker might be able to modify the schema of
            ##  * a database file to include invocations of the function with parameters
@@ -4383,7 +4383,7 @@ proc sqlite3_create_function*(db: ptr sqlite3; zFunctionName: cstring;
            ##  * [user-defined window functions|available here].
            ##  *
            ##  * ^(If the final parameter to sqlite3_create_function_v2() or
-           ##  * sqlite3_create_window_function() is not NULL, then it is destructor for
+           ##  * sqlite3_create_window_function() is not NULL, then it is the destructor for
            ##  * the application data pointer. The destructor is invoked when the function
            ##  * is deleted, either by being overloaded or when the database connection
            ##  * closes.)^ ^The destructor is also invoked if the call to
@@ -4629,7 +4629,7 @@ proc sqlite3_value_dup*(a1: ptr sqlite3_value): ptr sqlite3_value {.importc,
            ##  * METHOD: sqlite3_value
            ##  *
            ##  * ^The sqlite3_value_dup(V) interface makes a copy of the [sqlite3_value]
-           ##  * object D and returns a pointer to that copy.  ^The [sqlite3_value] returned
+           ##  * object V and returns a pointer to that copy.  ^The [sqlite3_value] returned
            ##  * is a [protected sqlite3_value] object even if the input is not.
            ##  * ^The sqlite3_value_dup(V) interface returns NULL if V is NULL or if a
            ##  * memory allocation fails. ^If V is a [pointer value], then the result
@@ -4667,7 +4667,7 @@ proc sqlite3_aggregate_context*(a1: ptr sqlite3_context; nBytes: cint): pointer 
                     ##  * allocation error occurs.
                     ##  *
                     ##  * ^(The amount of space allocated by sqlite3_aggregate_context(C,N) is
-                    ##  * determined by the N parameter on first successful call.  Changing the
+                    ##  * determined by the N parameter on the first successful call.  Changing the
                     ##  * value of N in any subsequent call to sqlite3_aggregate_context() within
                     ##  * the same aggregate function instance will not resize the memory
                     ##  * allocation.)^  Within the xFinal callback, it is customary to set
@@ -4829,7 +4829,7 @@ proc sqlite3_get_clientdata*(a1: ptr sqlite3; a2: cstring): pointer {.importc,
            ##  *
            ##  * Security Warning:  These interfaces should not be exposed in scripting
            ##  * languages or in other circumstances where it might be possible for an
-           ##  * an attacker to invoke them.  Any agent that can invoke these interfaces
+           ##  * attacker to invoke them.  Any agent that can invoke these interfaces
            ##  * can probably also take control of the process.
            ##  *
            ##  * Database connection client data is only available for SQLite
@@ -4927,7 +4927,7 @@ proc sqlite3_result_blob*(a1: ptr sqlite3_context; a2: pointer; a3: cint;
                                                                               ##  * pointed to by the 2nd parameter are taken as the application-defined
                                                                               ##  * function result.  If the 3rd parameter is non-negative, then it
                                                                               ##  * must be the byte offset into the string where the NUL terminator would
-                                                                              ##  * appear if the string where NUL terminated.  If any NUL characters occur
+                                                                              ##  * appear if the string were NUL terminated.  If any NUL characters occur
                                                                               ##  * in the string at a byte offset that is less than the value of the 3rd
                                                                               ##  * parameter, then the resulting string will contain embedded NULs and the
                                                                               ##  * result of expressions operating on strings with embedded NULs is undefined.
@@ -4985,7 +4985,7 @@ proc sqlite3_result_blob*(a1: ptr sqlite3_context; a2: pointer; a3: cint;
                                                                               ##  * string and preferably a string literal. The sqlite3_result_pointer()
                                                                               ##  * routine is part of the [pointer passing interface] added for SQLite 3.20.0.
                                                                               ##  *
-                                                                              ##  * If these routines are called from within the different thread
+                                                                              ##  * If these routines are called from within a different thread
                                                                               ##  * than the one containing the application-defined function that received
                                                                               ##  * the [sqlite3_context] pointer, the results are undefined.
                                                                               ## ```
@@ -5268,7 +5268,7 @@ proc sqlite3_db_name*(db: ptr sqlite3; N: cint): cstring {.importc, sqlitedecl.}
                                                                            ##  * METHOD: sqlite3
                                                                            ##  *
                                                                            ##  * ^The sqlite3_db_name(D,N) interface returns a pointer to the schema name
-                                                                           ##  * for the N-th database on database connection D, or a NULL pointer of N is
+                                                                           ##  * for the N-th database on database connection D, or a NULL pointer if N is
                                                                            ##  * out of range.  An N value of 0 means the main database file.  An N of 1 is
                                                                            ##  * the "temp" schema.  Larger values of N correspond to various ATTACH-ed
                                                                            ##  * databases.
@@ -5611,7 +5611,7 @@ proc sqlite3_soft_heap_limit64*(N: int64): int64 {.importc, sqlitedecl.}
                                                                    ##   * CAPI3REF: Impose A Limit On Heap Size
                                                                    ##  *
                                                                    ##  * These interfaces impose limits on the amount of heap memory that will be
-                                                                   ##  * by all database connections within a single process.
+                                                                   ##  * used by all database connections within a single process.
                                                                    ##  *
                                                                    ##  * ^The sqlite3_soft_heap_limit64() interface sets and/or queries the
                                                                    ##  * soft limit on the amount of heap memory that may be allocated by SQLite.
@@ -5669,7 +5669,7 @@ proc sqlite3_soft_heap_limit64*(N: int64): int64 {.importc, sqlitedecl.}
                                                                    ##  * </ul>)^
                                                                    ##  *
                                                                    ##  * The circumstances under which SQLite will enforce the heap limits may
-                                                                   ##  * changes in future releases of SQLite.
+                                                                   ##  * change in future releases of SQLite.
                                                                    ## ```
 proc sqlite3_hard_heap_limit64*(N: int64): int64 {.importc, sqlitedecl.}
 proc sqlite3_soft_heap_limit*(N: cint) {.importc, sqlitedecl.}
@@ -5776,8 +5776,8 @@ proc sqlite3_load_extension*(db: ptr sqlite3; zFile: cstring; zProc: cstring;
                                                                             ##  * ^The entry point is zProc.
                                                                             ##  * ^(zProc may be 0, in which case SQLite will try to come up with an
                                                                             ##  * entry point name on its own.  It first tries "sqlite3_extension_init".
-                                                                            ##  * If that does not work, it constructs a name "sqlite3_X_init" where the
-                                                                            ##  * X is consists of the lower-case equivalent of all ASCII alphabetic
+                                                                            ##  * If that does not work, it constructs a name "sqlite3_X_init" where
+                                                                            ##  * X consists of the lower-case equivalent of all ASCII alphabetic
                                                                             ##  * characters in the filename from the last "/" to the first following
                                                                             ##  * "." and omitting any initial "lib".)^
                                                                             ##  * ^The sqlite3_load_extension() interface returns
@@ -5843,7 +5843,7 @@ proc sqlite3_auto_extension*(xEntryPoint: proc () {.sqlitedecl.}): cint {.import
            ##  * ^(Even though the function prototype shows that xEntryPoint() takes
            ##  * no arguments and returns void, SQLite invokes xEntryPoint() with three
            ##  * arguments and expects an integer result as if the signature of the
-           ##  * entry point where as follows:
+           ##  * entry point were as follows:
            ##  *
            ##  * <blockquote><pre>
            ##  * &nbsp;  int xEntryPoint(
@@ -5905,7 +5905,7 @@ proc sqlite3_create_module*(db: ptr sqlite3; zName: cstring;
                     ##  * the implementation of the [virtual table module].   ^The fourth
                     ##  * parameter is an arbitrary client data pointer that is passed through
                     ##  * into the [xCreate] and [xConnect] methods of the virtual table module
-                    ##  * when a new virtual table is be being created or reinitialized.
+                    ##  * when a new virtual table is being created or reinitialized.
                     ##  *
                     ##  * ^The sqlite3_create_module_v2() interface has a fifth parameter which
                     ##  * is a pointer to a destructor for the pClientData.  ^SQLite will
@@ -5999,7 +5999,7 @@ proc sqlite3_blob_open*(a1: ptr sqlite3; zDb: cstring; zTable: cstring;
                                                                               ##  * inppBlob. Otherwise an [error code] is returned and, unless the error
                                                                               ##  * code is SQLITE_MISUSE,ppBlob is set to NULL.)^ ^This means that, provided
                                                                               ##  * the API is not misused, it is always safe to call [sqlite3_blob_close()]
-                                                                              ##  * onppBlob after this function it returns.
+                                                                              ##  * onppBlob after this function returns.
                                                                               ##  *
                                                                               ##  * This function fails with SQLITE_ERROR if any of the following are true:
                                                                               ##  * <ul>
@@ -6109,7 +6109,7 @@ proc sqlite3_blob_bytes*(a1: ptr sqlite3_blob): cint {.importc, sqlitedecl.}
                                                                        ##  *
                                                                        ##  * ^Returns the size in bytes of the BLOB accessible via the
                                                                        ##  * successfully opened [BLOB handle] in its only argument.  ^The
-                                                                       ##  * incremental blob I/O routines can only read or overwriting existing
+                                                                       ##  * incremental blob I/O routines can only read or overwrite existing
                                                                        ##  * blob content; they cannot change the size of a blob.
                                                                        ##  *
                                                                        ##  * This routine only works on a [BLOB handle] which has been created
@@ -6258,7 +6258,7 @@ proc sqlite3_mutex_alloc*(a1: cint): ptr sqlite3_mutex {.importc, sqlitedecl.}
                                                                          ##  * ^The sqlite3_mutex_alloc() routine allocates a new
                                                                          ##  * mutex and returns a pointer to it. ^The sqlite3_mutex_alloc()
                                                                          ##  * routine returns NULL if it is unable to allocate the requested
-                                                                         ##  * mutex.  The argument to sqlite3_mutex_alloc() must one of these
+                                                                         ##  * mutex.  The argument to sqlite3_mutex_alloc() must be one of these
                                                                          ##  * integer constants:
                                                                          ##  *
                                                                          ##  * <ul>
@@ -6349,7 +6349,7 @@ proc sqlite3_db_mutex*(a1: ptr sqlite3): ptr sqlite3_mutex {.importc, sqlitedecl
                                                                              ##   * CAPI3REF: Retrieve the mutex for a database connection
                                                                              ##  * METHOD: sqlite3
                                                                              ##  *
-                                                                             ##  * ^This interface returns a pointer the [sqlite3_mutex] object that
+                                                                             ##  * ^This interface returns a pointer to the [sqlite3_mutex] object that
                                                                              ##  * serializes access to the [database connection] given in the argument
                                                                              ##  * when the [threading mode] is Serialized.
                                                                              ##  * ^If the [threading mode] is Single-thread or Multi-thread then this
@@ -6421,7 +6421,7 @@ proc sqlite3_keyword_count*(): cint {.importc, sqlitedecl.}
                                                       ##   * CAPI3REF: SQL Keyword Checking
                                                       ##  *
                                                       ##  * These routines provide access to the set of SQL language keywords
-                                                      ##  * recognized by SQLite.  Applications can uses these routines to determine
+                                                      ##  * recognized by SQLite.  Applications can use these routines to determine
                                                       ##  * whether or not a specific identifier needs to be escaped (for example,
                                                       ##  * by enclosing in double-quotes) so as not to confuse the parser.
                                                       ##  *
@@ -6570,7 +6570,7 @@ proc sqlite3_str_errcode*(a1: ptr sqlite3_str): cint {.importc, sqlitedecl.}
                                                                        ##  * content of the dynamic string under construction in X.  The value
                                                                        ##  * returned by [sqlite3_str_value(X)] is managed by the sqlite3_str object X
                                                                        ##  * and might be freed or altered by any subsequent method on the same
-                                                                       ##  * [sqlite3_str] object.  Applications must not used the pointer returned
+                                                                       ##  * [sqlite3_str] object.  Applications must not use the pointer returned by
                                                                        ##  * [sqlite3_str_value(X)] after any subsequent method call on the same
                                                                        ##  * object.  ^Applications may change the content of the string returned
                                                                        ##  * by [sqlite3_str_value(X)] as long as they do not write into any bytes
@@ -6776,7 +6776,7 @@ proc sqlite3_backup_init*(pDest: ptr sqlite3; zDestName: cstring;
                     ##  * external process or via a database connection other than the one being
                     ##  * used by the backup operation, then the backup will be automatically
                     ##  * restarted by the next call to sqlite3_backup_step(). ^If the source
-                    ##  * database is modified by the using the same database connection as is used
+                    ##  * database is modified by using the same database connection as is used
                     ##  * by the backup operation, then the backup database is automatically
                     ##  * updated at the same time.
                     ##  *
@@ -6793,7 +6793,7 @@ proc sqlite3_backup_init*(pDest: ptr sqlite3; zDestName: cstring;
                     ##  * and may not be used following a call to sqlite3_backup_finish().
                     ##  *
                     ##  * ^The value returned by sqlite3_backup_finish is [SQLITE_OK] if no
-                    ##  * sqlite3_backup_step() errors occurred, regardless or whether or not
+                    ##  * sqlite3_backup_step() errors occurred, regardless of whether or not
                     ##  * sqlite3_backup_step() completed.
                     ##  * ^If an out-of-memory condition or IO error occurred during any prior
                     ##  * sqlite3_backup_step() call on the same [sqlite3_backup] object, then
@@ -7648,7 +7648,7 @@ proc sqlite3_db_cacheflush*(a1: ptr sqlite3): cint {.importc, sqlitedecl.}
                                                                      ##  * METHOD: sqlite3
                                                                      ##  *
                                                                      ##  * ^If a write-transaction is open on [database connection] D when the
-                                                                     ##  * [sqlite3_db_cacheflush(D)] interface invoked, any dirty
+                                                                     ##  * [sqlite3_db_cacheflush(D)] interface is invoked, any dirty
                                                                      ##  * pages in the pager-cache that are not currently in use are written out
                                                                      ##  * to disk. A dirty page may be in use if a database cursor created by an
                                                                      ##  * active SQL statement is reading from it, or if it is page 1 of a database
