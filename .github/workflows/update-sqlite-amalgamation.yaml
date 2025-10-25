@@ -12,7 +12,7 @@ jobs:
       - name: Get latest SQLite release
         id: latest
         run: |
-          info="$(curl -s 'https://www.sqlite.org/download.html' | grep 'sqlite-amalgamation-' | head -n 2 | tail -n 1)"
+          info="$(curl -s 'https://www.sqlite.org/download.html' | grep 'PRODUCT' | grep 'sqlite-amalgamation-' | head -n 1)"
           if ! echo "$info" | grep -Eq '^PRODUCT,[0-9]+\.[0-9]+\.[0-9]+,[0-9]{4}/sqlite-amalgamation-[0-9]+\.zip,[0-9]+,[0-9a-f]{64}$'; then
             echo "Unexpected format: $info"
             exit 1
