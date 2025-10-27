@@ -1,0 +1,67 @@
+name: Update sqlite-amalgamation
+on:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get latest SQLite release
+        id: latest
+        run: |
+          info="$(curl -s 'https://www.sqlite.org/download.html' | grep 'PRODUCT' | grep 'sqlite-amalgamation-' | head -n 1)"
+          if ! echo "$info" | grep -Eq '^PRODUCT,[0-9]+\.[0-9]+\.[0-9]+,[0-9]{4}/sqlite-amalgamation-[0-9]+\.zip,[0-9]+,[0-9a-f]{64}$'; then
+            echo "Unexpected format: $info"
+            exit 1
+          fi
+          amalgamation_version="$(echo "$info" | cut -d',' -f2)"
+          amalgamation_path="$(echo "$info" | cut -d',' -f3)"
+          amalgamation_hash="$(echo "$info" | cut -d',' -f5)"
+          echo "major=$(echo "$amalgamation_version" | cut -d'.' -f1)" >> $GITHUB_OUTPUT
+          echo "minor=$(echo "$amalgamation_version" | cut -d'.' -f2)" >> $GITHUB_OUTPUT
+          echo "patch=$(echo "$amalgamation_version" | cut -d'.' -f3)" >> $GITHUB_OUTPUT
+          echo "year=$(echo "$amalgamation_path" | cut -d'/' -f1)" >> $GITHUB_OUTPUT
+          echo "hash=$amalgamation_hash" >> $GITHUB_OUTPUT
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update
+        id: update
+        run: |
+          sed -i -E \
+            -e "s/(MAJOR=\"\\\$\{1:-)[0-9]+/\1${{ steps.latest.outputs.major }}/" \
+            -e "s/(MINOR=\"\\\$\{2:-)[0-9]+/\1${{ steps.latest.outputs.minor }}/" \
+            -e "s/(PATCH=\"\\\$\{3:-)[0-9]+/\1${{ steps.latest.outputs.patch }}/" \
+            -e "s/(YEAR=\"\\\$\{4:-)[0-9]+/\1${{ steps.latest.outputs.year }}/" \
+            -e "s/(HASH=\"\\\$\{5:-)[0-9a-f]+/\1${{ steps.latest.outputs.hash }}/" \
+            update.sh
+          if ! git diff --exit-code; then
+            echo "changes=1" >> $GITHUB_OUTPUT
+          else
+            echo "changes=0" >> $GITHUB_OUTPUT
+          fi
+
+      - if: steps.update.outputs.changes == 1
+        uses: jiro4989/setup-nim-action@v1
+        with:
+          nim-version: "1.6.x"
+
+      - name: Generate Nim wrapper
+        if: steps.update.outputs.changes == 1
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          nim --version
+          ./update.sh
+
+      - name: Release
+        if: steps.update.outputs.changes == 1
+        run: |
+          tag="v${{ steps.latest.outputs.major }}.${{ steps.latest.outputs.minor }}.${{ steps.latest.outputs.patch }}.0"
+          git tag "$tag"
+          git push origin master
+          git push origin "$tag"
