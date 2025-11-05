@@ -27,9 +27,12 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.50.4"
-  SQLITE_VERSION_NUMBER* = 3050004
-  SQLITE_SOURCE_ID* = "2025-07-30 19:33:53 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+  SQLITE_VERSION* = "3.51.0"
+  SQLITE_VERSION_NUMBER* = 3051000
+  SQLITE_SOURCE_ID* = "2025-11-04 19:38:17 fb2c931ae597f8d00a37574ff67aeed3eced4e5547f9120744a-experimental"
+  SQLITE_SCM_BRANCH* = "unknown"
+  SQLITE_SCM_TAGS* = "unknown"
+  SQLITE_SCM_DATETIME* = "2025-11-04T19:38:17.314Z"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -67,6 +70,12 @@ const
     SQLITE_ERROR or typeof(SQLITE_ERROR)((2 shl typeof(SQLITE_ERROR)(8))))
   SQLITE_ERROR_SNAPSHOT* = (
     SQLITE_ERROR or typeof(SQLITE_ERROR)((3 shl typeof(SQLITE_ERROR)(8))))
+  SQLITE_ERROR_RESERVESIZE* = (
+    SQLITE_ERROR or typeof(SQLITE_ERROR)((4 shl typeof(SQLITE_ERROR)(8))))
+  SQLITE_ERROR_KEY* = (
+    SQLITE_ERROR or typeof(SQLITE_ERROR)((5 shl typeof(SQLITE_ERROR)(8))))
+  SQLITE_ERROR_UNABLE* = (
+    SQLITE_ERROR or typeof(SQLITE_ERROR)((6 shl typeof(SQLITE_ERROR)(8))))
   SQLITE_IOERR_READ* = (
     SQLITE_IOERR or typeof(SQLITE_IOERR)((1 shl typeof(SQLITE_IOERR)(8))))
   SQLITE_IOERR_SHORT_READ* = (
@@ -135,6 +144,10 @@ const
     SQLITE_IOERR or typeof(SQLITE_IOERR)((33 shl typeof(SQLITE_IOERR)(8))))
   SQLITE_IOERR_IN_PAGE* = (
     SQLITE_IOERR or typeof(SQLITE_IOERR)((34 shl typeof(SQLITE_IOERR)(8))))
+  SQLITE_IOERR_BADKEY* = (
+    SQLITE_IOERR or typeof(SQLITE_IOERR)((35 shl typeof(SQLITE_IOERR)(8))))
+  SQLITE_IOERR_CODEC* = (
+    SQLITE_IOERR or typeof(SQLITE_IOERR)((36 shl typeof(SQLITE_IOERR)(8))))
   SQLITE_LOCKED_SHAREDCACHE* = (
     SQLITE_LOCKED or typeof(SQLITE_LOCKED)((1 shl typeof(SQLITE_LOCKED)(8))))
   SQLITE_LOCKED_VTAB* = (
@@ -305,6 +318,7 @@ const
   SQLITE_FCNTL_RESET_CACHE* = 42
   SQLITE_FCNTL_NULL_IO* = 43
   SQLITE_FCNTL_BLOCK_ON_CONNECT* = 44
+  SQLITE_FCNTL_FILESTAT* = 45
   SQLITE_ACCESS_EXISTS* = 0
   SQLITE_ACCESS_READWRITE* = 1
   SQLITE_ACCESS_READ* = 2
@@ -542,7 +556,8 @@ const
   SQLITE_DBSTATUS_DEFERRED_FKS* = 10
   SQLITE_DBSTATUS_CACHE_USED_SHARED* = 11
   SQLITE_DBSTATUS_CACHE_SPILL* = 12
-  SQLITE_DBSTATUS_MAX* = 12
+  SQLITE_DBSTATUS_TEMPBUF_SPILL* = 13
+  SQLITE_DBSTATUS_MAX* = 13
   SQLITE_STMTSTATUS_FULLSCAN_STEP* = 1
   SQLITE_STMTSTATUS_SORT* = 2
   SQLITE_STMTSTATUS_AUTOINDEX* = 3
@@ -552,6 +567,7 @@ const
   SQLITE_STMTSTATUS_FILTER_MISS* = 7
   SQLITE_STMTSTATUS_FILTER_HIT* = 8
   SQLITE_STMTSTATUS_MEMUSED* = 99
+  SQLITE_CHECKPOINT_NOOP* = -1
   SQLITE_CHECKPOINT_PASSIVE* = 0
   SQLITE_CHECKPOINT_FULL* = 1
   SQLITE_CHECKPOINT_RESTART* = 2
@@ -576,6 +592,16 @@ const
   SQLITE_DESERIALIZE_FREEONCLOSE* = 1
   SQLITE_DESERIALIZE_RESIZEABLE* = 2
   SQLITE_DESERIALIZE_READONLY* = 4
+  SQLITE_CARRAY_INT32* = 0
+  SQLITE_CARRAY_INT64* = 1
+  SQLITE_CARRAY_DOUBLE* = 2
+  SQLITE_CARRAY_TEXT* = 3
+  SQLITE_CARRAY_BLOB* = 4
+  CARRAY_INT32* = 0
+  CARRAY_INT64* = 1
+  CARRAY_DOUBLE* = 2
+  CARRAY_TEXT* = 3
+  CARRAY_BLOB* = 4
   NOT_WITHIN* = 0
   PARTLY_WITHIN* = 1
   FULLY_WITHIN* = 2
@@ -1638,7 +1664,7 @@ proc sqlite3_exec*(a1: ptr sqlite3; sql: cstring; callback: proc (a1: pointer;
                                                                 ##  * without having to use a lot of C code.
                                                                 ##  *
                                                                 ##  * ^The sqlite3_exec() interface runs zero or more UTF-8 encoded,
-                                                                ##  * semicolon-separate SQL statements passed into its 2nd argument,
+                                                                ##  * semicolon-separated SQL statements passed into its 2nd argument,
                                                                 ##  * in the context of the [database connection] passed in as its 1st
                                                                 ##  * argument.  ^If the callback function of the 3rd argument to
                                                                 ##  * sqlite3_exec() is not NULL, then it is invoked for each result row
@@ -1671,7 +1697,7 @@ proc sqlite3_exec*(a1: ptr sqlite3; sql: cstring; callback: proc (a1: pointer;
                                                                 ##  * result row is NULL then the corresponding string pointer for the
                                                                 ##  * sqlite3_exec() callback is a NULL pointer.  ^The 4th argument to the
                                                                 ##  * sqlite3_exec() callback is an array of pointers to strings where each
-                                                                ##  * entry represents the name of corresponding result column as obtained
+                                                                ##  * entry represents the name of a corresponding result column as obtained
                                                                 ##  * from [sqlite3_column_name()].
                                                                 ##  *
                                                                 ##  * ^If the 2nd parameter to sqlite3_exec() is a NULL pointer, a pointer
@@ -1734,7 +1760,7 @@ proc sqlite3_initialize*(): cint {.importc, sqlitedecl.}
                                                    ##  * SQLite interfaces so that an application usually does not need to
                                                    ##  * invoke sqlite3_initialize() directly.  For example, [sqlite3_open()]
                                                    ##  * calls sqlite3_initialize() so the SQLite library will be automatically
-                                                   ##  * initialized when [sqlite3_open()] is called if it has not be initialized
+                                                   ##  * initialized when [sqlite3_open()] is called if it has not been initialized
                                                    ##  * already.  ^However, if SQLite is compiled with the [SQLITE_OMIT_AUTOINIT]
                                                    ##  * compile-time option, then the automatic calls to sqlite3_initialize()
                                                    ##  * are omitted and the application must call sqlite3_initialize() directly
@@ -2071,7 +2097,7 @@ proc sqlite3_complete*(sql: cstring): cint {.importc, sqlitedecl.}
                                                              ##  * ^These routines return 0 if the statement is incomplete.  ^If a
                                                              ##  * memory allocation fails, then SQLITE_NOMEM is returned.
                                                              ##  *
-                                                             ##  * ^These routines do not parse the SQL statements thus
+                                                             ##  * ^These routines do not parse the SQL statements and thus
                                                              ##  * will not detect syntactically incorrect SQL.
                                                              ##  *
                                                              ##  * ^(If SQLite has not been initialized using [sqlite3_initialize()] prior
@@ -2188,7 +2214,7 @@ proc sqlite3_setlk_timeout*(a1: ptr sqlite3; ms: cint; flags: cint): cint {.
                     ##  * indefinitely if possible. The results of passing any other negative value
                     ##  * are undefined.
                     ##  *
-                    ##  * Internally, each SQLite database handle store two timeout values - the
+                    ##  * Internally, each SQLite database handle stores two timeout values - the
                     ##  * busy-timeout (used for rollback mode databases, or if the VFS does not
                     ##  * support blocking locks) and the setlk-timeout (used for blocking locks
                     ##  * on wal-mode databases). The sqlite3_busy_timeout() method sets both
@@ -2215,7 +2241,7 @@ proc sqlite3_get_table*(db: ptr sqlite3; zSql: cstring;
                     ##  * This is a legacy interface that is preserved for backwards compatibility.
                     ##  * Use of this interface is not recommended.
                     ##  *
-                    ##  * Definition: A <b>result table</b> is memory data structure created by the
+                    ##  * Definition: A <b>result table</b> is a memory data structure created by the
                     ##  * [sqlite3_get_table()] interface.  A result table records the
                     ##  * complete query results from one or more queries.
                     ##  *
@@ -2348,7 +2374,7 @@ proc sqlite3_malloc*(a1: cint): pointer {.importc, sqlitedecl.}
                                                           ##  * ^Calling sqlite3_free() with a pointer previously returned
                                                           ##  * by sqlite3_malloc() or sqlite3_realloc() releases that memory so
                                                           ##  * that it might be reused.  ^The sqlite3_free() routine is
-                                                          ##  * a no-op if is called with a NULL pointer.  Passing a NULL pointer
+                                                          ##  * a no-op if it is called with a NULL pointer.  Passing a NULL pointer
                                                           ##  * to sqlite3_free() is harmless.  After being freed, memory
                                                           ##  * should neither be read nor written.  Even reading previously freed
                                                           ##  * memory might result in a segmentation fault or other severe error.
@@ -2366,13 +2392,13 @@ proc sqlite3_malloc*(a1: cint): pointer {.importc, sqlitedecl.}
                                                           ##  * sqlite3_free(X).
                                                           ##  * ^sqlite3_realloc(X,N) returns a pointer to a memory allocation
                                                           ##  * of at least N bytes in size or NULL if insufficient memory is available.
-                                                          ##  * ^If M is the size of the prior allocation, then min(N,M) bytes
-                                                          ##  * of the prior allocation are copied into the beginning of buffer returned
+                                                          ##  * ^If M is the size of the prior allocation, then min(N,M) bytes of the
+                                                          ##  * prior allocation are copied into the beginning of the buffer returned
                                                           ##  * by sqlite3_realloc(X,N) and the prior allocation is freed.
                                                           ##  * ^If sqlite3_realloc(X,N) returns NULL and N is positive, then the
                                                           ##  * prior allocation is not freed.
                                                           ##  *
-                                                          ##  * ^The sqlite3_realloc64(X,N) interfaces works the same as
+                                                          ##  * ^The sqlite3_realloc64(X,N) interface works the same as
                                                           ##  * sqlite3_realloc(X,N) except that N is a 64-bit unsigned integer instead
                                                           ##  * of a 32-bit signed integer.
                                                           ##  *
@@ -2421,7 +2447,7 @@ proc sqlite3_memory_used*(): int64 {.importc, sqlitedecl.}
                                                      ##  * was last reset.  ^The values returned by [sqlite3_memory_used()] and
                                                      ##  * [sqlite3_memory_highwater()] include any overhead
                                                      ##  * added by SQLite in its implementation of [sqlite3_malloc()],
-                                                     ##  * but not overhead added by the any underlying system library
+                                                     ##  * but not overhead added by any underlying system library
                                                      ##  * routines that [sqlite3_malloc()] may call.
                                                      ##  *
                                                      ##  * ^The memory high-water mark is reset to the current value of
@@ -2739,7 +2765,7 @@ proc sqlite3_open*(filename: cstring; ppDb: ptr ptr sqlite3): cint {.importc,
            ##  * there is no harm in trying.)
            ##  *
            ##  * ^(<dt>[SQLITE_OPEN_SHAREDCACHE]</dt>
-           ##  * <dd>The database is opened [shared cache] enabled, overriding
+           ##  * <dd>The database is opened with [shared cache] enabled, overriding
            ##  * the default shared cache setting provided by
            ##  * [sqlite3_enable_shared_cache()].)^
            ##  * The [use of shared cache mode is discouraged] and hence shared cache
@@ -2747,7 +2773,7 @@ proc sqlite3_open*(filename: cstring; ppDb: ptr ptr sqlite3): cint {.importc,
            ##  * this option is a no-op.
            ##  *
            ##  * ^(<dt>[SQLITE_OPEN_PRIVATECACHE]</dt>
-           ##  * <dd>The database is opened [shared cache] disabled, overriding
+           ##  * <dd>The database is opened with [shared cache] disabled, overriding
            ##  * the default shared cache setting provided by
            ##  * [sqlite3_enable_shared_cache()].)^
            ##  *
@@ -3151,7 +3177,7 @@ proc sqlite3_errcode*(db: ptr sqlite3): cint {.importc, sqlitedecl.}
                                                                ##  * subsequent calls to other SQLite interface functions.)^
                                                                ##  *
                                                                ##  * ^The sqlite3_errstr(E) interface returns the English-language text
-                                                               ##  * that describes the [result code] E, as UTF-8, or NULL if E is not an
+                                                               ##  * that describes the [result code] E, as UTF-8, or NULL if E is not a
                                                                ##  * result code for which a text error message is available.
                                                                ##  * ^(Memory to hold the error message string is managed internally
                                                                ##  * and must not be freed by the application)^.
@@ -3159,7 +3185,7 @@ proc sqlite3_errcode*(db: ptr sqlite3): cint {.importc, sqlitedecl.}
                                                                ##  * ^If the most recent error references a specific token in the input
                                                                ##  * SQL, the sqlite3_error_offset() interface returns the byte offset
                                                                ##  * of the start of that token.  ^The byte offset returned by
-                                                               ##  * sqlite3_error_offset() assumes that the input SQL is UTF8.
+                                                               ##  * sqlite3_error_offset() assumes that the input SQL is UTF-8.
                                                                ##  * ^If the most recent error does not reference a specific token in the input
                                                                ##  * SQL, then the sqlite3_error_offset() function returns -1.
                                                                ##  *
@@ -3182,6 +3208,34 @@ proc sqlite3_errmsg*(a1: ptr sqlite3): cstring {.importc, sqlitedecl.}
 proc sqlite3_errmsg16*(a1: ptr sqlite3): pointer {.importc, sqlitedecl.}
 proc sqlite3_errstr*(a1: cint): cstring {.importc, sqlitedecl.}
 proc sqlite3_error_offset*(db: ptr sqlite3): cint {.importc, sqlitedecl.}
+proc sqlite3_set_errmsg*(db: ptr sqlite3; errcode: cint; zErrMsg: cstring): cint {.
+    importc, sqlitedecl.}
+  ## ```
+                    ##   * CAPI3REF: Set Error Codes And Message
+                    ##  * METHOD: sqlite3
+                    ##  *
+                    ##  * Set the error code of the database handle passed as the first argument
+                    ##  * to errcode, and the error message to a copy of nul-terminated string
+                    ##  * zErrMsg. If zErrMsg is passed NULL, then the error message is set to
+                    ##  * the default message associated with the supplied error code.  Subsequent
+                    ##  * calls to [sqlite3_errcode()] and [sqlite3_errmsg()] and similar will
+                    ##  * return the values set by this routine in place of what was previously
+                    ##  * set by SQLite itself.
+                    ##  *
+                    ##  * This function returns SQLITE_OK if the error code and error message are
+                    ##  * successfully set, SQLITE_NOMEM if an OOM occurs, and SQLITE_MISUSE if
+                    ##  * the database handle is NULL or invalid.
+                    ##  *
+                    ##  * The error code and message set by this routine remains in effect until
+                    ##  * they are changed, either by another call to this routine or until they are
+                    ##  * changed to by SQLite itself to reflect the result of some subsquent
+                    ##  * API call.
+                    ##  *
+                    ##  * This function is intended for use by SQLite extensions or wrappers.  The
+                    ##  * idea is that an extension or wrapper can use this routine to set error
+                    ##  * messages and error codes and thus behave more like a core SQLite
+                    ##  * feature from the point of view of an application.
+                    ## ```
 proc sqlite3_limit*(a1: ptr sqlite3; id: cint; newVal: cint): cint {.importc,
     sqlitedecl.}
   ## ```
@@ -3267,7 +3321,7 @@ proc sqlite3_prepare*(db: ptr sqlite3; zSql: cstring; nByte: cint;
                     ##  * there is a small performance advantage to passing an nByte parameter that
                     ##  * is the number of bytes in the input string <i>including</i>
                     ##  * the nul-terminator.
-                    ##  * Note that nByte measure the length of the input in bytes, not
+                    ##  * Note that nByte measures the length of the input in bytes, not
                     ##  * characters, even for the UTF-16 interfaces.
                     ##  *
                     ##  * ^If pzTail is not NULL thenpzTail is made to point to the first byte
@@ -3372,7 +3426,7 @@ proc sqlite3_sql*(pStmt: ptr sqlite3_stmt): cstring {.importc, sqlitedecl.}
                                                                       ##  *
                                                                       ##  * ^The sqlite3_expanded_sql() interface returns NULL if insufficient memory
                                                                       ##  * is available to hold the result, or if the result would exceed the
-                                                                      ##  * the maximum string length determined by the [SQLITE_LIMIT_LENGTH].
+                                                                      ##  * maximum string length determined by the [SQLITE_LIMIT_LENGTH].
                                                                       ##  *
                                                                       ##  * ^The [SQLITE_TRACE_SIZE_LIMIT] compile-time option limits the size of
                                                                       ##  * bound parameter expansions.  ^The [SQLITE_OMIT_TRACE] compile-time
@@ -3620,9 +3674,11 @@ proc sqlite3_bind_blob*(a1: ptr sqlite3_stmt; a2: cint; a3: pointer; n: cint;
                                                                                   ##  * associated with the pointer P of type T.  ^D is either a NULL pointer or
                                                                                   ##  * a pointer to a destructor function for P. ^SQLite will invoke the
                                                                                   ##  * destructor D with a single argument of P when it is finished using
-                                                                                  ##  * P.  The T parameter should be a static string, preferably a string
-                                                                                  ##  * literal. The sqlite3_bind_pointer() routine is part of the
-                                                                                  ##  * [pointer passing interface] added for SQLite 3.20.0.
+                                                                                  ##  * P, even if the call to sqlite3_bind_pointer() fails.  Due to a
+                                                                                  ##  * historical design quirk, results are undefined if D is
+                                                                                  ##  * SQLITE_TRANSIENT. The T parameter should be a static string,
+                                                                                  ##  * preferably a string literal. The sqlite3_bind_pointer() routine is
+                                                                                  ##  * part of the [pointer passing interface] added for SQLite 3.20.0.
                                                                                   ##  *
                                                                                   ##  * ^If any of the sqlite3_bind_*() routines are called with a NULL pointer
                                                                                   ##  * for the [prepared statement] or with a prepared statement for which
@@ -4224,7 +4280,7 @@ proc sqlite3_finalize*(pStmt: ptr sqlite3_stmt): cint {.importc, sqlitedecl.}
                                                                         ##  *
                                                                         ##  * ^The sqlite3_finalize() function is called to delete a [prepared statement].
                                                                         ##  * ^If the most recent evaluation of the statement encountered no errors
-                                                                        ##  * or if the statement is never been evaluated, then sqlite3_finalize() returns
+                                                                        ##  * or if the statement has never been evaluated, then sqlite3_finalize() returns
                                                                         ##  * SQLITE_OK.  ^If the most recent evaluation of statement S failed, then
                                                                         ##  * sqlite3_finalize(S) returns the appropriate [error code] or
                                                                         ##  * [extended error code].
@@ -4524,7 +4580,7 @@ proc sqlite3_value_blob*(a1: ptr sqlite3_value): pointer {.importc, sqlitedecl.}
                                                                            ##  * sqlite3_value_nochange(X) interface returns true if and only if
                                                                            ##  * the column corresponding to X is unchanged by the UPDATE operation
                                                                            ##  * that the xUpdate method call was invoked to implement and if
-                                                                           ##  * and the prior [xColumn] method call that was invoked to extracted
+                                                                           ##  * the prior [xColumn] method call that was invoked to extract
                                                                            ##  * the value for that column returned without setting a result (probably
                                                                            ##  * because it queried [sqlite3_vtab_nochange()] and found that the column
                                                                            ##  * was unchanging).  ^Within an [xUpdate] method, any value for which
@@ -4796,6 +4852,7 @@ proc sqlite3_get_clientdata*(a1: ptr sqlite3; a2: cstring): pointer {.importc,
            ##  * or a NULL pointer if there were no prior calls to
            ##  * sqlite3_set_clientdata() with the same values of D and N.
            ##  * Names are compared using strcmp() and are thus case sensitive.
+           ##  * It returns 0 on success and SQLITE_NOMEM on allocation failure.
            ##  *
            ##  * If P and X are both non-NULL, then the destructor X is invoked with
            ##  * argument P on the first of the following occurrences:
@@ -6632,8 +6689,18 @@ proc sqlite3_db_status*(a1: ptr sqlite3; op: cint; pCur: ptr cint;
                                                                                   ##  * ^The sqlite3_db_status() routine returns SQLITE_OK on success and a
                                                                                   ##  * non-zero [error code] on failure.
                                                                                   ##  *
+                                                                                  ##  * ^The sqlite3_db_status64(D,O,C,H,R) routine works exactly the same
+                                                                                  ##  * way as sqlite3_db_status(D,O,C,H,R) routine except that the C and H
+                                                                                  ##  * parameters are pointer to 64-bit integers (type: sqlite3_int64) instead
+                                                                                  ##  * of pointers to 32-bit integers, which allows larger status values
+                                                                                  ##  * to be returned.  If a status value exceeds 2,147,483,647 then
+                                                                                  ##  * sqlite3_db_status() will truncate the value whereas sqlite3_db_status64()
+                                                                                  ##  * will return the full value.
+                                                                                  ##  *
                                                                                   ##  * See also: [sqlite3_status()] and [sqlite3_stmt_status()].
                                                                                   ## ```
+proc sqlite3_db_status64*(a1: ptr sqlite3; a2: cint; a3: ptr int64;
+                          a4: ptr int64; a5: cint): cint {.importc, sqlitedecl.}
 proc sqlite3_stmt_status*(a1: ptr sqlite3_stmt; op: cint; resetFlg: cint): cint {.
     importc, sqlitedecl.}
   ## ```
@@ -7076,7 +7143,7 @@ proc sqlite3_wal_hook*(a1: ptr sqlite3; a2: proc (a1: pointer; a2: ptr sqlite3;
            ##  * is the number of pages currently in the write-ahead log file,
            ##  * including those that were just committed.
            ##  *
-           ##  * The callback function should normally return [SQLITE_OK].  ^If an error
+           ##  * ^The callback function should normally return [SQLITE_OK].  ^If an error
            ##  * code is returned, that error will propagate back up through the
            ##  * SQLite code base to cause the statement that provoked the callback
            ##  * to report an error, though the commit will have still occurred. If the
@@ -7084,13 +7151,26 @@ proc sqlite3_wal_hook*(a1: ptr sqlite3; a2: proc (a1: pointer; a2: ptr sqlite3;
            ##  * that does not correspond to any valid SQLite error code, the results
            ##  * are undefined.
            ##  *
-           ##  * A single database handle may have at most a single write-ahead log callback
-           ##  * registered at one time. ^Calling [sqlite3_wal_hook()] replaces any
-           ##  * previously registered write-ahead log callback. ^The return value is
-           ##  * a copy of the third parameter from the previous call, if any, or 0.
-           ##  * ^Note that the [sqlite3_wal_autocheckpoint()] interface and the
-           ##  * [wal_autocheckpoint pragma] both invoke [sqlite3_wal_hook()] and will
-           ##  * overwrite any prior [sqlite3_wal_hook()] settings.
+           ##  * ^A single database handle may have at most a single write-ahead log
+           ##  * callback registered at one time. ^Calling [sqlite3_wal_hook()]
+           ##  * replaces the default behavior or previously registered write-ahead
+           ##  * log callback.
+           ##  *
+           ##  * ^The return value is a copy of the third parameter from the
+           ##  * previous call, if any, or 0.
+           ##  *
+           ##  * ^The [sqlite3_wal_autocheckpoint()] interface and the
+           ##  * [wal_autocheckpoint pragma] both invoke [sqlite3_wal_hook()] and
+           ##  * will overwrite any prior [sqlite3_wal_hook()] settings.
+           ##  *
+           ##  * ^If a write-ahead log callback is set using this function then
+           ##  * [sqlite3_wal_checkpoint_v2()] or [PRAGMA wal_checkpoint]
+           ##  * should be invoked periodically to keep the write-ahead log file
+           ##  * from growing without bound.
+           ##  *
+           ##  * ^Passing a NULL pointer for the callback disables automatic
+           ##  * checkpointing entirely. To re-enable the default behavior, call
+           ##  * sqlite3_wal_autocheckpoint(db,1000) or use [PRAGMA wal_checkpoint].
            ## ```
 proc sqlite3_wal_autocheckpoint*(db: ptr sqlite3; N: cint): cint {.importc,
     sqlitedecl.}
@@ -7103,7 +7183,7 @@ proc sqlite3_wal_autocheckpoint*(db: ptr sqlite3; N: cint): cint {.importc,
            ##  * to automatically [checkpoint]
            ##  * after committing a transaction if there are N or
            ##  * more frames in the [write-ahead log] file.  ^Passing zero or
-           ##  * a negative value as the nFrame parameter disables automatic
+           ##  * a negative value as the N parameter disables automatic
            ##  * checkpoints entirely.
            ##  *
            ##  * ^The callback registered by this function replaces any existing callback
@@ -7119,9 +7199,10 @@ proc sqlite3_wal_autocheckpoint*(db: ptr sqlite3; N: cint): cint {.importc,
            ##  *
            ##  * ^Every new [database connection] defaults to having the auto-checkpoint
            ##  * enabled with a threshold of 1000 or [SQLITE_DEFAULT_WAL_AUTOCHECKPOINT]
-           ##  * pages.  The use of this interface
-           ##  * is only necessary if the default setting is found to be suboptimal
-           ##  * for a particular application.
+           ##  * pages.
+           ##  *
+           ##  * ^The use of this interface is only necessary if the default setting
+           ##  * is found to be suboptimal for a particular application.
            ## ```
 proc sqlite3_wal_checkpoint*(db: ptr sqlite3; zDb: cstring): cint {.importc,
     sqlitedecl.}
@@ -7187,6 +7268,11 @@ proc sqlite3_wal_checkpoint_v2*(db: ptr sqlite3; zDb: cstring; eMode: cint;
                     ##  *   ^This mode works the same way as SQLITE_CHECKPOINT_RESTART with the
                     ##  *   addition that it also truncates the log file to zero bytes just prior
                     ##  *   to a successful return.
+                    ##  *
+                    ##  * <dt>SQLITE_CHECKPOINT_NOOP<dd>
+                    ##  *   ^This mode always checkpoints zero frames. The only reason to invoke
+                    ##  *   a NOOP checkpoint is to access the values returned by
+                    ##  *   sqlite3_wal_checkpoint_v2() via output parameterspnLog andpnCkpt.
                     ##  * </dl>
                     ##  *
                     ##  * ^If pnLog is not NULL, thenpnLog is set to the total number of frames in
@@ -8000,12 +8086,13 @@ proc sqlite3_deserialize*(db: ptr sqlite3; zSchema: cstring; pData: ptr cuchar;
                     ##  *
                     ##  * The sqlite3_deserialize(D,S,P,N,M,F) interface causes the
                     ##  * [database connection] D to disconnect from database S and then
-                    ##  * reopen S as an in-memory database based on the serialization contained
-                    ##  * in P.  The serialized database P is N bytes in size.  M is the size of
-                    ##  * the buffer P, which might be larger than N.  If M is larger than N, and
-                    ##  * the SQLITE_DESERIALIZE_READONLY bit is not set in F, then SQLite is
-                    ##  * permitted to add content to the in-memory database as long as the total
-                    ##  * size does not exceed M bytes.
+                    ##  * reopen S as an in-memory database based on the serialization
+                    ##  * contained in P.  If S is a NULL pointer, the main database is
+                    ##  * used. The serialized database P is N bytes in size.  M is the size
+                    ##  * of the buffer P, which might be larger than N.  If M is larger than
+                    ##  * N, and the SQLITE_DESERIALIZE_READONLY bit is not set in F, then
+                    ##  * SQLite is permitted to add content to the in-memory database as
+                    ##  * long as the total size does not exceed M bytes.
                     ##  *
                     ##  * If the SQLITE_DESERIALIZE_FREEONCLOSE bit is set in F, then SQLite will
                     ##  * invoke sqlite3_free() on the serialization buffer when the database
@@ -8038,6 +8125,26 @@ proc sqlite3_deserialize*(db: ptr sqlite3; zSchema: cstring; pData: ptr cuchar;
                     ##  * This interface is omitted if SQLite is compiled with the
                     ##  * [SQLITE_OMIT_DESERIALIZE] option.
                     ## ```
+proc sqlite3_carray_bind*(pStmt: ptr sqlite3_stmt; i: cint; aData: pointer;
+                          nData: cint; mFlags: cint;
+                          xDel: proc (a1: pointer) {.sqlitedecl.}): cint {.importc,
+    sqlitedecl.}
+  ## ```
+           ##   * CAPI3REF: Bind array values to the CARRAY table-valued function
+           ##  *
+           ##  * The sqlite3_carray_bind(S,I,P,N,F,X) interface binds an array value to
+           ##  * one of the first argument of the [carray() table-valued function].  The
+           ##  * S parameter is a pointer to the [prepared statement] that uses the carray()
+           ##  * functions.  I is the parameter index to be bound.  P is a pointer to the
+           ##  * array to be bound, and N is the number of eements in the array.  The
+           ##  * F argument is one of constants [SQLITE_CARRAY_INT32], [SQLITE_CARRAY_INT64],
+           ##  * [SQLITE_CARRAY_DOUBLE], [SQLITE_CARRAY_TEXT], or [SQLITE_CARRAY_BLOB] to
+           ##  * indicate the datatype of the array being bound.  The X argument is not a
+           ##  * NULL pointer, then SQLite will invoke the function X on the P parameter
+           ##  * after it has finished using P, even if the call to
+           ##  * sqlite3_carray_bind() fails. The special-case finalizer
+           ##  * SQLITE_TRANSIENT has no effect here.
+           ## ```
 proc sqlite3_rtree_geometry_callback*(db: ptr sqlite3; zGeom: cstring; xGeom: proc (
     a1: ptr sqlite3_rtree_geometry; a2: cint; a3: ptr sqlite3_rtree_dbl;
     a4: ptr cint): cint {.sqlitedecl.}; pContext: pointer): cint {.importc, sqlitedecl.}
