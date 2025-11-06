@@ -11,7 +11,7 @@ MAJOR="${1:-3}"
 MINOR="${2:-51}"
 PATCH="${3:-0}"
 YEAR="${4:-2025}"
-HASH="${5:-08653f3d2b8267388c452ff1bd8aaf2cb769217005d50ca2a6bb3d95d3e2812b}"
+HASH="${5:-01d85a7831c611f000aca64fa2b01cd8acb33f8adf6e6e21556353d898b97166}"
 
 VER_INT="$(printf "%d%02d%02d00" "$MAJOR" "$MINOR" "$PATCH")"
 
