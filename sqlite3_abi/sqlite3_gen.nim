@@ -27,12 +27,12 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.51.0"
-  SQLITE_VERSION_NUMBER* = 3051000
-  SQLITE_SOURCE_ID* = "2025-11-04 19:38:17 fb2c931ae597f8d00a37574ff67aeed3eced4e5547f9120744ae4bfa8e74527b"
-  SQLITE_SCM_BRANCH* = "trunk"
-  SQLITE_SCM_TAGS* = "release major-release version-3.51.0"
-  SQLITE_SCM_DATETIME* = "2025-11-04T19:38:17.314Z"
+  SQLITE_VERSION* = "3.51.1"
+  SQLITE_VERSION_NUMBER* = 3051001
+  SQLITE_SOURCE_ID* = "2025-11-28 17:28:25 281fc0e9afc38674b9b0991943b9e9d1e64c6cbdb133d35f6f5c87ff6af38a88"
+  SQLITE_SCM_BRANCH* = "branch-3.51"
+  SQLITE_SCM_TAGS* = "release version-3.51.1"
+  SQLITE_SCM_DATETIME* = "2025-11-28T17:28:25.933Z"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -7612,7 +7612,7 @@ proc sqlite3_vtab_in_first*(pVal: ptr sqlite3_value;
                                                                                   ##  * &nbsp;  ){
                                                                                   ##  * &nbsp;     do something with pVal
                                                                                   ##  * &nbsp;  }
-                                                                                  ##  * &nbsp;  if( rc!=SQLITE_OK ){
+                                                                                  ##  * &nbsp;  if( rc!=SQLITE_DONE ){
                                                                                   ##  * &nbsp;     an error has occurred
                                                                                   ##  * &nbsp;  }
                                                                                   ##  * </pre></blockquote>)^
