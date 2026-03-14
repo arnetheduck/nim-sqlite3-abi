@@ -27,12 +27,12 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.52.0"
-  SQLITE_VERSION_NUMBER* = 3052000
-  SQLITE_SOURCE_ID* = "2026-03-06 16:01:44 557aeb43869d3585137b17690cb3b64f7de6921774daae9e56403c3717dceab6"
-  SQLITE_SCM_BRANCH* = "trunk"
-  SQLITE_SCM_TAGS* = "release major-release version-3.52.0"
-  SQLITE_SCM_DATETIME* = "2026-03-06T16:01:44.367Z"
+  SQLITE_VERSION* = "3.51.3"
+  SQLITE_VERSION_NUMBER* = 3051003
+  SQLITE_SOURCE_ID* = "2026-03-13 10:38:09 737ae4a34738ffa0c3ff7f9bb18df914dd1cad163f28fd6b6e114a344fe6d618"
+  SQLITE_SCM_BRANCH* = "branch-3.51"
+  SQLITE_SCM_TAGS* = "release version-3.51.3"
+  SQLITE_SCM_DATETIME* = "2026-03-13T10:38:09.694Z"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
@@ -379,8 +379,7 @@ const
   SQLITE_DBCONFIG_ENABLE_ATTACH_CREATE* = 1020
   SQLITE_DBCONFIG_ENABLE_ATTACH_WRITE* = 1021
   SQLITE_DBCONFIG_ENABLE_COMMENTS* = 1022
-  SQLITE_DBCONFIG_FP_DIGITS* = 1023
-  SQLITE_DBCONFIG_MAX* = 1023
+  SQLITE_DBCONFIG_MAX* = 1022
   SQLITE_SETLK_BLOCK_ON_CONNECT* = 0x00000001
   SQLITE_DENY* = 1
   SQLITE_IGNORE* = 2
@@ -434,12 +433,10 @@ const
   SQLITE_LIMIT_VARIABLE_NUMBER* = 9
   SQLITE_LIMIT_TRIGGER_DEPTH* = 10
   SQLITE_LIMIT_WORKER_THREADS* = 11
-  SQLITE_LIMIT_PARSER_DEPTH* = 12
   SQLITE_PREPARE_PERSISTENT* = 0x00000001
   SQLITE_PREPARE_NORMALIZE* = 0x00000002
   SQLITE_PREPARE_NO_VTAB* = 0x00000004
   SQLITE_PREPARE_DONT_LOG* = 0x00000010
-  SQLITE_PREPARE_FROM_DDL* = 0x00000020
   SQLITE_INTEGER* = 1
   SQLITE_FLOAT* = 2
   SQLITE_BLOB* = 4
@@ -452,7 +449,6 @@ const
   SQLITE_UTF16* = 4
   SQLITE_ANY* = 5
   SQLITE_UTF16_ALIGNED* = 8
-  SQLITE_UTF8_ZT* = 16
   SQLITE_DETERMINISTIC* = 0x00000800
   SQLITE_DIRECTONLY* = 0x00080000
   SQLITE_SUBTYPE* = 0x00100000
@@ -3169,7 +3165,6 @@ proc sqlite3_errcode*(db: ptr sqlite3): cint {.importc, sqlitedecl.}
                                                                ##  * <li> sqlite3_errmsg()
                                                                ##  * <li> sqlite3_errmsg16()
                                                                ##  * <li> sqlite3_error_offset()
-                                                               ##  * <li> sqlite3_db_handle()
                                                                ##  * </ul>
                                                                ##  *
                                                                ##  * ^The sqlite3_errmsg() and sqlite3_errmsg16() return English-language
@@ -3216,7 +3211,7 @@ proc sqlite3_error_offset*(db: ptr sqlite3): cint {.importc, sqlitedecl.}
 proc sqlite3_set_errmsg*(db: ptr sqlite3; errcode: cint; zErrMsg: cstring): cint {.
     importc, sqlitedecl.}
   ## ```
-                    ##   * CAPI3REF: Set Error Code And Message
+                    ##   * CAPI3REF: Set Error Codes And Message
                     ##  * METHOD: sqlite3
                     ##  *
                     ##  * Set the error code of the database handle passed as the first argument
@@ -3298,9 +3293,8 @@ proc sqlite3_prepare*(db: ptr sqlite3; zSql: cstring; nByte: cint;
                     ##  *
                     ##  * The preferred routine to use is [sqlite3_prepare_v2()].  The
                     ##  * [sqlite3_prepare()] interface is legacy and should be avoided.
-                    ##  * [sqlite3_prepare_v3()] has an extra
-                    ##  * [SQLITE_PREPARE_FROM_DDL|"prepFlags" option] that is some times
-                    ##  * needed for special purpose or to pass along security restrictions.
+                    ##  * [sqlite3_prepare_v3()] has an extra "prepFlags" option that is used
+                    ##  * for special purposes.
                     ##  *
                     ##  * The use of the UTF-8 interfaces is preferred, as SQLite currently
                     ##  * does all parsing using UTF-8.  The UTF-16 interfaces are provided
@@ -3612,8 +3606,8 @@ proc sqlite3_bind_blob*(a1: ptr sqlite3_stmt; a2: cint; a3: pointer; n: cint;
                                                                                   ##  * it should be a pointer to well-formed UTF16 text.
                                                                                   ##  * ^If the third parameter to sqlite3_bind_text64() is not NULL, then
                                                                                   ##  * it should be a pointer to a well-formed unicode string that is
-                                                                                  ##  * either UTF8 if the sixth parameter is SQLITE_UTF8 or SQLITE_UTF8_ZT,
-                                                                                  ##  * or UTF16 otherwise.
+                                                                                  ##  * either UTF8 if the sixth parameter is SQLITE_UTF8, or UTF16
+                                                                                  ##  * otherwise.
                                                                                   ##  *
                                                                                   ##  * [[byte-order determination rules]] ^The byte-order of
                                                                                   ##  * UTF16 input text is determined by the byte-order mark (BOM, U+FEFF)
@@ -3659,15 +3653,10 @@ proc sqlite3_bind_blob*(a1: ptr sqlite3_stmt; a2: cint; a3: pointer; n: cint;
                                                                                   ##  * object and pointer to it must remain valid until then. ^SQLite will then
                                                                                   ##  * manage the lifetime of its private copy.
                                                                                   ##  *
-                                                                                  ##  * ^The sixth argument (the E argument)
-                                                                                  ##  * to sqlite3_bind_text64(S,K,Z,N,D,E) must be one of
-                                                                                  ##  * [SQLITE_UTF8], [SQLITE_UTF8_ZT], [SQLITE_UTF16], [SQLITE_UTF16BE],
-                                                                                  ##  * or [SQLITE_UTF16LE] to specify the encoding of the text in the
-                                                                                  ##  * third parameter, Z.  The special value [SQLITE_UTF8_ZT] means that the
-                                                                                  ##  * string argument is both UTF-8 encoded and is zero-terminated.  In other
-                                                                                  ##  * words, SQLITE_UTF8_ZT means that the Z array is allocated to hold at
-                                                                                  ##  * least N+1 bytes and that the Z&#91;N&#93; byte is zero.  If
-                                                                                  ##  * the E argument to sqlite3_bind_text64(S,K,Z,N,D,E) is not one of the
+                                                                                  ##  * ^The sixth argument to sqlite3_bind_text64() must be one of
+                                                                                  ##  * [SQLITE_UTF8], [SQLITE_UTF16], [SQLITE_UTF16BE], or [SQLITE_UTF16LE]
+                                                                                  ##  * to specify the encoding of the text in the third parameter.  If
+                                                                                  ##  * the sixth argument to sqlite3_bind_text64() is not one of the
                                                                                   ##  * allowed values shown above, or if the text encoding is different
                                                                                   ##  * from the encoding specified by the sixth parameter, then the behavior
                                                                                   ##  * is undefined.
@@ -4885,14 +4874,10 @@ proc sqlite3_get_clientdata*(a1: ptr sqlite3; a2: cstring): pointer {.importc,
            ##  *
            ##  * There is no limit (other than available memory) on the number of different
            ##  * client data pointers (with different names) that can be attached to a
-           ##  * single database connection.  However, the current implementation stores
-           ##  * the content on a linked list.  Insert and retrieval performance will
-           ##  * be proportional to the number of entries.  The design use case, and
-           ##  * the use case for which the implementation is optimized, is
-           ##  * that an application will store only small number of client data names,
-           ##  * typically just one or two.  This interface is not intended to be a
-           ##  * generalized key/value store for thousands or millions of keys.  It
-           ##  * will work for that, but performance might be disappointing.
+           ##  * single database connection.  However, the implementation is optimized
+           ##  * for the case of having only one or two different client data names.
+           ##  * Applications and wrapper libraries are discouraged from using more than
+           ##  * one client data name each.
            ##  *
            ##  * There is no way to enumerate the client data pointers
            ##  * associated with a database connection.  The N parameter can be thought
@@ -4984,14 +4969,10 @@ proc sqlite3_result_blob*(a1: ptr sqlite3_context; a2: pointer; a3: cint;
                                                                               ##  * set the return value of the application-defined function to be
                                                                               ##  * a text string which is represented as UTF-8, UTF-16 native byte order,
                                                                               ##  * UTF-16 little endian, or UTF-16 big endian, respectively.
-                                                                              ##  * ^The sqlite3_result_text64(C,Z,N,D,E) interface sets the return value of an
+                                                                              ##  * ^The sqlite3_result_text64() interface sets the return value of an
                                                                               ##  * application-defined function to be a text string in an encoding
-                                                                              ##  * specified the E parameter, which must be one
-                                                                              ##  * of [SQLITE_UTF8], [SQLITE_UTF8_ZT], [SQLITE_UTF16], [SQLITE_UTF16BE],
-                                                                              ##  * or [SQLITE_UTF16LE].  ^The special value [SQLITE_UTF8_ZT] means that
-                                                                              ##  * the result text is both UTF-8 and zero-terminated.  In other words,
-                                                                              ##  * SQLITE_UTF8_ZT means that the Z array holds at least N+1 byes and that
-                                                                              ##  * the Z&#91;N&#93; is zero.
+                                                                              ##  * specified by the fifth (and last) parameter, which must be one
+                                                                              ##  * of [SQLITE_UTF8], [SQLITE_UTF16], [SQLITE_UTF16BE], or [SQLITE_UTF16LE].
                                                                               ##  * ^SQLite takes the text result from the application from
                                                                               ##  * the 2nd parameter of the sqlite3_result_text* interfaces.
                                                                               ##  * ^If the 3rd parameter to any of the sqlite3_result_text* interfaces
@@ -5082,7 +5063,7 @@ proc sqlite3_result_int64*(a1: ptr sqlite3_context; a2: int64) {.importc, sqlite
 proc sqlite3_result_null*(a1: ptr sqlite3_context) {.importc, sqlitedecl.}
 proc sqlite3_result_text*(a1: ptr sqlite3_context; a2: cstring; a3: cint;
                           a4: proc (a1: pointer) {.sqlitedecl.}) {.importc, sqlitedecl.}
-proc sqlite3_result_text64*(a1: ptr sqlite3_context; z: cstring; n: uint64;
+proc sqlite3_result_text64*(a1: ptr sqlite3_context; a2: cstring; a3: uint64;
                             a4: proc (a1: pointer) {.sqlitedecl.}; encoding: cuchar) {.
     importc, sqlitedecl.}
 proc sqlite3_result_text16*(a1: ptr sqlite3_context; a2: pointer; a3: cint;
@@ -5844,7 +5825,7 @@ proc sqlite3_load_extension*(db: ptr sqlite3; zFile: cstring; zProc: cstring;
                                                                             ##  * ^The sqlite3_load_extension() interface attempts to load an
                                                                             ##  * [SQLite extension] library contained in the file zFile.  If
                                                                             ##  * the file cannot be loaded directly, attempts are made to load
-                                                                            ##  * with various operating-system specific filename extensions added.
+                                                                            ##  * with various operating-system specific extensions added.
                                                                             ##  * So for example, if "samplelib" cannot be loaded, then names like
                                                                             ##  * "samplelib.so" or "samplelib.dylib" or "samplelib.dll" might
                                                                             ##  * be tried also.
@@ -5852,10 +5833,10 @@ proc sqlite3_load_extension*(db: ptr sqlite3; zFile: cstring; zProc: cstring;
                                                                             ##  * ^The entry point is zProc.
                                                                             ##  * ^(zProc may be 0, in which case SQLite will try to come up with an
                                                                             ##  * entry point name on its own.  It first tries "sqlite3_extension_init".
-                                                                            ##  * If that does not work, it tries names of the form "sqlite3_X_init"
-                                                                            ##  * where X consists of the lower-case equivalent of all ASCII alphabetic
-                                                                            ##  * characters or all ASCII alphanumeric characters in the filename from
-                                                                            ##  * the last "/" to the first following "." and omitting any initial "lib".)^
+                                                                            ##  * If that does not work, it constructs a name "sqlite3_X_init" where
+                                                                            ##  * X consists of the lower-case equivalent of all ASCII alphabetic
+                                                                            ##  * characters in the filename from the last "/" to the first following
+                                                                            ##  * "." and omitting any initial "lib".)^
                                                                             ##  * ^The sqlite3_load_extension() interface returns
                                                                             ##  * [SQLITE_OK] on success and [SQLITE_ERROR] if something goes wrong.
                                                                             ##  * ^If an error occurs and pzErrMsg is not 0, then the
@@ -6580,22 +6561,17 @@ proc sqlite3_str_finish*(a1: ptr sqlite3_str): cstring {.importc, sqlitedecl.}
                                                                          ##  * pass the returned value to [sqlite3_free()] to avoid a memory leak.
                                                                          ##  * ^The [sqlite3_str_finish(X)] interface may return a NULL pointer if any
                                                                          ##  * errors were encountered during construction of the string.  ^The
-                                                                         ##  * [sqlite3_str_finish(X)] interface might also return a NULL pointer if the
+                                                                         ##  * [sqlite3_str_finish(X)] interface will also return a NULL pointer if the
                                                                          ##  * string in [sqlite3_str] object X is zero bytes long.
-                                                                         ##  *
-                                                                         ##  * ^The [sqlite3_str_free(X)] interface destroys both the sqlite3_str object
-                                                                         ##  * X and the string content it contains.  Calling sqlite3_str_free(X) is
-                                                                         ##  * the equivalent of calling [sqlite3_free](sqlite3_str_finish(X)).
                                                                          ## ```
-proc sqlite3_str_free*(a1: ptr sqlite3_str) {.importc, sqlitedecl.}
 proc sqlite3_str_appendf*(a1: ptr sqlite3_str; zFormat: cstring) {.importc,
     sqlitedecl, varargs.}
   ## ```
                     ##   * CAPI3REF: Add Content To A Dynamic String
                     ##  * METHOD: sqlite3_str
                     ##  *
-                    ##  * These interfaces add or remove content to an sqlite3_str object
-                    ##  * previously obtained from [sqlite3_str_new()].
+                    ##  * These interfaces add content to an sqlite3_str object previously obtained
+                    ##  * from [sqlite3_str_new()].
                     ##  *
                     ##  * ^The [sqlite3_str_appendf(X,F,...)] and
                     ##  * [sqlite3_str_vappendf(X,F,V)] interfaces uses the [built-in printf]
@@ -6618,10 +6594,6 @@ proc sqlite3_str_appendf*(a1: ptr sqlite3_str; zFormat: cstring) {.importc,
                     ##  * ^The [sqlite3_str_reset(X)] method resets the string under construction
                     ##  * inside [sqlite3_str] object X back to zero bytes in length.
                     ##  *
-                    ##  * ^The [sqlite3_str_truncate(X,N)] method changes the length of the string
-                    ##  * under construction to be N bytes are less.  This routine is a no-op if
-                    ##  * N is negative or if the string is already N bytes or smaller in size.
-                    ##  *
                     ##  * These methods do not return a result code.  ^If an error occurs, that fact
                     ##  * is recorded in the [sqlite3_str] object and can be recovered by a
                     ##  * subsequent call to [sqlite3_str_errcode(X)].
@@ -6632,7 +6604,6 @@ proc sqlite3_str_appendall*(a1: ptr sqlite3_str; zIn: cstring) {.importc, sqlite
 proc sqlite3_str_appendchar*(a1: ptr sqlite3_str; N: cint; C: cchar) {.importc,
     sqlitedecl.}
 proc sqlite3_str_reset*(a1: ptr sqlite3_str) {.importc, sqlitedecl.}
-proc sqlite3_str_truncate*(a1: ptr sqlite3_str; N: cint) {.importc, sqlitedecl.}
 proc sqlite3_str_errcode*(a1: ptr sqlite3_str): cint {.importc, sqlitedecl.}
   ## ```
                                                                        ##   * CAPI3REF: Status Of A Dynamic String
@@ -7726,9 +7697,9 @@ proc sqlite3_stmt_scanstatus*(pStmt: ptr sqlite3_stmt; idx: cint;
                     ##  * a variable pointed to by the "pOut" parameter.
                     ##  *
                     ##  * The "flags" parameter must be passed a mask of flags. At present only
-                    ##  * one flag is defined - [SQLITE_SCANSTAT_COMPLEX]. If SQLITE_SCANSTAT_COMPLEX
+                    ##  * one flag is defined - SQLITE_SCANSTAT_COMPLEX. If SQLITE_SCANSTAT_COMPLEX
                     ##  * is specified, then status information is available for all elements
-                    ##  * of a query plan that are reported by "[EXPLAIN QUERY PLAN]" output. If
+                    ##  * of a query plan that are reported by "EXPLAIN QUERY PLAN" output. If
                     ##  * SQLITE_SCANSTAT_COMPLEX is not specified, then only query plan elements
                     ##  * that correspond to query loops (the "SCAN..." and "SEARCH..." elements of
                     ##  * the EXPLAIN QUERY PLAN output) are available. Invoking API
@@ -7742,8 +7713,7 @@ proc sqlite3_stmt_scanstatus*(pStmt: ptr sqlite3_stmt; idx: cint;
                     ##  * elements used to implement the statement - a non-zero value is returned and
                     ##  * the variable that pOut points to is unchanged.
                     ##  *
-                    ##  * See also: [sqlite3_stmt_scanstatus_reset()] and the
-                    ##  * [nexec and ncycle] columnes of the [bytecode virtual table].
+                    ##  * See also: [sqlite3_stmt_scanstatus_reset()]
                     ## ```
 proc sqlite3_stmt_scanstatus_v2*(pStmt: ptr sqlite3_stmt; idx: cint;
                                  iScanStatusOp: cint; flags: cint; pOut: pointer): cint {.
@@ -8155,43 +8125,26 @@ proc sqlite3_deserialize*(db: ptr sqlite3; zSchema: cstring; pData: ptr cuchar;
                     ##  * This interface is omitted if SQLite is compiled with the
                     ##  * [SQLITE_OMIT_DESERIALIZE] option.
                     ## ```
-proc sqlite3_carray_bind_v2*(pStmt: ptr sqlite3_stmt; i: cint; aData: pointer;
-                             nData: cint; mFlags: cint;
-                             xDel: proc (a1: pointer) {.sqlitedecl.}; pDel: pointer): cint {.
-    importc, sqlitedecl.}
-  ## ```
-                    ##   * CAPI3REF: Bind array values to the CARRAY table-valued function
-                    ##  *
-                    ##  * The sqlite3_carray_bind_v2(S,I,P,N,F,X,D) interface binds an array value to
-                    ##  * parameter that is the first argument of the [carray() table-valued function].
-                    ##  * The S parameter is a pointer to the [prepared statement] that uses the carray()
-                    ##  * functions.  I is the parameter index to be bound.  I must be the index of the
-                    ##  * parameter that is the first argument to the carray() table-valued function.
-                    ##  * P is a pointer to the array to be bound, and N is the number of elements in
-                    ##  * the array.  The F argument is one of constants [SQLITE_CARRAY_INT32],
-                    ##  * [SQLITE_CARRAY_INT64], [SQLITE_CARRAY_DOUBLE], [SQLITE_CARRAY_TEXT],
-                    ##  * or [SQLITE_CARRAY_BLOB] to indicate the datatype of the array P.
-                    ##  *
-                    ##  * If the X argument is not a NULL pointer or one of the special
-                    ##  * values [SQLITE_STATIC] or [SQLITE_TRANSIENT], then SQLite will invoke
-                    ##  * the function X with argument D when it is finished using the data in P.
-                    ##  * The call to X(D) is a destructor for the array P. The destructor X(D)
-                    ##  * is invoked even if the call to sqlite3_carray_bind() fails. If the X
-                    ##  * parameter is the special-case value [SQLITE_STATIC], then SQLite assumes
-                    ##  * that the data static and the destructor is never invoked.  If the X
-                    ##  * parameter is the special-case value [SQLITE_TRANSIENT], then
-                    ##  * sqlite3_carray_bind_v2() makes its own private copy of the data prior
-                    ##  * to returning and never invokes the destructor X.
-                    ##  *
-                    ##  * The sqlite3_carray_bind() function works the same as sqlite_carray_bind_v2()
-                    ##  * with a D parameter set to P.  In other words,
-                    ##  * sqlite3_carray_bind(S,I,P,N,F,X) is same as
-                    ##  * sqlite3_carray_bind(S,I,P,N,F,X,P).
-                    ## ```
 proc sqlite3_carray_bind*(pStmt: ptr sqlite3_stmt; i: cint; aData: pointer;
                           nData: cint; mFlags: cint;
                           xDel: proc (a1: pointer) {.sqlitedecl.}): cint {.importc,
     sqlitedecl.}
+  ## ```
+           ##   * CAPI3REF: Bind array values to the CARRAY table-valued function
+           ##  *
+           ##  * The sqlite3_carray_bind(S,I,P,N,F,X) interface binds an array value to
+           ##  * one of the first argument of the [carray() table-valued function].  The
+           ##  * S parameter is a pointer to the [prepared statement] that uses the carray()
+           ##  * functions.  I is the parameter index to be bound.  P is a pointer to the
+           ##  * array to be bound, and N is the number of eements in the array.  The
+           ##  * F argument is one of constants [SQLITE_CARRAY_INT32], [SQLITE_CARRAY_INT64],
+           ##  * [SQLITE_CARRAY_DOUBLE], [SQLITE_CARRAY_TEXT], or [SQLITE_CARRAY_BLOB] to
+           ##  * indicate the datatype of the array being bound.  The X argument is not a
+           ##  * NULL pointer, then SQLite will invoke the function X on the P parameter
+           ##  * after it has finished using P, even if the call to
+           ##  * sqlite3_carray_bind() fails. The special-case finalizer
+           ##  * SQLITE_TRANSIENT has no effect here.
+           ## ```
 proc sqlite3_rtree_geometry_callback*(db: ptr sqlite3; zGeom: cstring; xGeom: proc (
     a1: ptr sqlite3_rtree_geometry; a2: cint; a3: ptr sqlite3_rtree_dbl;
     a4: ptr cint): cint {.sqlitedecl.}; pContext: pointer): cint {.importc, sqlitedecl.}
