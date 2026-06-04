@@ -27,12 +27,12 @@ else:
   {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}
 {.compile: "sqlite3_abi/sqlite3.c".}
 const
-  SQLITE_VERSION* = "3.53.1"
-  SQLITE_VERSION_NUMBER* = 3053001
-  SQLITE_SOURCE_ID* = "2026-05-05 10:34:17 c88b22011a54b4f6fbd149e9f8e4de77658ce58143a1af0e3785e4e6475127e9"
+  SQLITE_VERSION* = "3.53.2"
+  SQLITE_VERSION_NUMBER* = 3053002
+  SQLITE_SOURCE_ID* = "2026-06-03 19:12:13 d6e03d8c777cfa2d35e3b60d8ec3e0187f3e9f99d8e2ee9cac695fd6fcdf1a24"
   SQLITE_SCM_BRANCH* = "branch-3.53"
-  SQLITE_SCM_TAGS* = "release version-3.53.1"
-  SQLITE_SCM_DATETIME* = "2026-05-05T10:34:17.344Z"
+  SQLITE_SCM_TAGS* = "release version-3.53.2"
+  SQLITE_SCM_DATETIME* = "2026-06-03T19:12:13.350Z"
   SQLITE_OK* = 0
   SQLITE_ERROR* = 1
   SQLITE_INTERNAL* = 2
