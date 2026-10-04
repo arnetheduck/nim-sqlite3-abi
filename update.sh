@@ -41,6 +41,7 @@ sed -i.bak \
   -e 's|{.experimental: "codeReordering".}|{.experimental: "codeReordering".}\nwhen (NimMajor, NimMinor) < (1, 4):\n  {.pragma: sqlitedecl, cdecl, gcsafe, raises: [Defect].}\nelse:\n  {.pragma: sqlitedecl, cdecl, gcsafe, raises: [].}|' \
   -e "s|sqlite3_column_text\\*(a1: ptr sqlite3_stmt; iCol: cint): ptr cuchar|sqlite3_column_text\\*(a1: ptr sqlite3_stmt; iCol: cint): cstring|" \
   -e "s|sqlite3_value_text\\*(a1: ptr sqlite3_value): ptr cuchar|sqlite3_value_text\\*(a1: ptr sqlite3_value): cstring|" \
+  -e 's|^  \([A-Za-z0-9_]*\)\* {.incompleteStruct.} = object|  \1* {.exportc, incompleteStruct.} = object|' \
   sqlite3_abi/sqlite3_gen.nim
 rm -f sqlite3_abi/sqlite3_gen.nim.bak  # Portable GNU/macOS `sed` needs backup
 

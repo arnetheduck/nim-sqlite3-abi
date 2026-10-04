@@ -616,7 +616,7 @@ const
   FTS5_TOKENIZE_AUX* = 0x00000008
   FTS5_TOKEN_COLOCATED* = 0x00000001
 type
-  sqlite3* {.incompleteStruct.} = object
+  sqlite3* {.exportc, incompleteStruct.} = object
   sqlite3_callback* = proc (a1: pointer; a2: cint; a3: ptr cstring;
                             a4: ptr cstring): cint {.sqlitedecl.}
   sqlite3_file* {.bycopy.} = object
@@ -664,8 +664,8 @@ type
                 ##      Additional methods may be added in future releases
                 ## ```
   
-  sqlite3_mutex* {.incompleteStruct.} = object
-  sqlite3_api_routines* {.incompleteStruct.} = object
+  sqlite3_mutex* {.exportc, incompleteStruct.} = object
+  sqlite3_api_routines* {.exportc, incompleteStruct.} = object
   sqlite3_filename* = cstring ## ```
                               ##   * CAPI3REF: File Name
                               ##  *
@@ -772,9 +772,9 @@ type
                              ##   Argument to xInit() and xShutdown()
                              ## ```
   
-  sqlite3_stmt* {.incompleteStruct.} = object
-  sqlite3_value* {.incompleteStruct.} = object
-  sqlite3_context* {.incompleteStruct.} = object
+  sqlite3_stmt* {.exportc, incompleteStruct.} = object
+  sqlite3_value* {.exportc, incompleteStruct.} = object
+  sqlite3_context* {.exportc, incompleteStruct.} = object
   sqlite3_destructor_type* = proc (a1: pointer) {.sqlitedecl.}
   sqlite3_vtab* {.bycopy.} = object ## ```
                                      ##   * CAPI3REF: Virtual Table Instance Object
@@ -899,7 +899,7 @@ type
                 ##    * Those below are for version 4 and greater.
                 ## ```
   
-  sqlite3_blob* {.incompleteStruct.} = object
+  sqlite3_blob* {.exportc, incompleteStruct.} = object
   sqlite3_mutex_methods* {.bycopy.} = object
     xMutexInit*: proc (): cint {.sqlitedecl.}
     xMutexEnd*: proc (): cint {.sqlitedecl.}
@@ -911,8 +911,8 @@ type
     xMutexHeld*: proc (a1: ptr sqlite3_mutex): cint {.sqlitedecl.}
     xMutexNotheld*: proc (a1: ptr sqlite3_mutex): cint {.sqlitedecl.}
 
-  sqlite3_str* {.incompleteStruct.} = object
-  sqlite3_pcache* {.incompleteStruct.} = object
+  sqlite3_str* {.exportc, incompleteStruct.} = object
+  sqlite3_pcache* {.exportc, incompleteStruct.} = object
   sqlite3_pcache_page* {.bycopy.} = object
     pBuf*: pointer           ## ```
                              ##   The content of the page
@@ -955,7 +955,7 @@ type
     xTruncate*: proc (a1: ptr sqlite3_pcache; iLimit: cuint) {.sqlitedecl.}
     xDestroy*: proc (a1: ptr sqlite3_pcache) {.sqlitedecl.}
 
-  sqlite3_backup* {.incompleteStruct.} = object
+  sqlite3_backup* {.exportc, incompleteStruct.} = object
   sqlite3_snapshot* {.bycopy.} = object ## ```
                                          ##   * CAPI3REF: Database Snapshot
                                          ##  * KEYWORDS: {snapshot} {sqlite3_snapshot}
@@ -1407,7 +1407,7 @@ type
         a1: pointer; a2: cint; a3: cstring; a4: cint; a5: cint; a6: cint): cint {.
         sqlitedecl.}): cint {.sqlitedecl.}
 
-  Fts5Context* {.incompleteStruct.} = object
+  Fts5Context* {.exportc, incompleteStruct.} = object
   Fts5PhraseIter* {.bycopy.} = object
     a*: ptr cuchar
     b*: ptr cuchar
@@ -1416,7 +1416,7 @@ type
                                    pFts: ptr Fts5Context;
                                    pCtx: ptr sqlite3_context; nVal: cint;
                                    apVal: ptr ptr sqlite3_value) {.sqlitedecl.}
-  Fts5Tokenizer* {.incompleteStruct.} = object
+  Fts5Tokenizer* {.exportc, incompleteStruct.} = object
   fts5_tokenizer_v2* {.bycopy.} = object
     iVersion*: cint          ## ```
                              ##   Currently always 2
